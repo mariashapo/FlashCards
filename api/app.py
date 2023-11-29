@@ -51,5 +51,5 @@ def display_word(word_id):
     next_id = next_record[0]['id'] if next_record else None
 
     # Render a template with the record and the next_id
-    return render_template("display_words.html", record=record[0], next_id=next_id)
+    return render_template("display_words.html", record=record[0], next_id=next_id, current_id=word_id)
 
