@@ -1,5 +1,5 @@
-{% macro create_navbar(location) %}
-	<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+{% macro create_navbar(location, color) %}
+	<nav class="navbar navbar-expand-lg navbar-dark {{color}}">
 		<a class="navbar-brand">FlashCards</a>  {# Name of the app #}
 		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
 				aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">

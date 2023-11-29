@@ -4,8 +4,13 @@
     <head>
 		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
 	</head>
+    <style>
+            .form-background {
+                background-color: #3498db;
+            }
+    </style>
 <body>
-    {{create_navbar("display_words")}}
+    {{create_navbar("display_words", "form-background")}}
     <h1>Reached the display words page</h1>
 </body>
 </html>
