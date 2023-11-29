@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 import requests
 from supabase import create_client, Client
 
@@ -27,6 +27,29 @@ def added_word():
     response = supabase.table("Flashcards").insert(data).execute()
     return render_template("added_word.html", word=word, translation=translation)
 
+
+# The /display_words route is used to fetch and redirect to the first word in your Flashcards table.
 @app.route("/display_words")
 def display_words():
-    return render_template("display_words.html")
+
+    # Fetch the smallest id (first record)
+    first_record = supabase.table("Flashcards").select("id").order('id').limit(1).execute().data
+
+    first_id = first_record[0]['id']
+    return redirect(url_for('display_word', word_id=first_id))
+
+
+@app.route("/display_word/<int:word_id>")
+def display_word(word_id):
+    table = "Flashcards"  # Replace with your table name
+
+    # Fetch the record with the given word_id
+    record = supabase.table(table).select("*").eq('id', word_id).execute().data
+
+    # Fetch the next record's ID for the "Next" button
+    next_record = supabase.table(table).select("id").gt('id', word_id).order('id').limit(1).execute().data
+    next_id = next_record[0]['id'] if next_record else None
+
+    # Render a template with the record and the next_id
+    return render_template("display_words.html", record=record[0], next_id=next_id)
+

@@ -60,33 +60,46 @@
            transform: rotateY(180deg);
        }
    </style>
+   <head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+    <title>Display Word</title>
+    <!-- Other head content -->
 </head>
 <body class="page-background text-center">
-    {{create_navbar("display_words", "form-background")}}
+    {{ create_navbar("display_words", "form-background") }}
+
     <div class="container centering">
-   <div class="row">
-    <div class="col-xs-1" align="center">
-   <div class="flashcard-container" onclick="flipFlashcard()">
-       <div class="flashcard">
-           <div class="front">
-               <h2 style="color: #fff; font-size: 3.2vw;">Word</h2>
-           </div>
-           <div class="back" >
-               <h2 style="color: #fff; font-size: 3.2vw;">Translation</h2>
-           </div>
-       </div>
-   </div>
-   </div>
-   </div>
-   </div>
-   </div>
+        <div class="row">
+            <div class="col-xs-12" align="center">
+                {% if record %}
+                    <div class="flashcard-container" onclick="flipFlashcard()">
+                        <div class="flashcard">
+                            <div class="front">
+                                <h2 style="color: #fff; font-size: 3.2vw;">{{ record.word1 }}</h2> <!-- Display the word -->
+                            </div>
+                            <div class="back">
+                                <h2 style="color: #fff; font-size: 3.2vw;">{{ record.word2 }}</h2> <!-- Display the translation -->
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Next Button -->
+                    {% if next_id %}
+                        <a href="{{ url_for('display_word', word_id=next_id) }}" class="btn btn-primary mt-3">Next</a>
+                    {% else %}
+                        <p>No more words.</p>
+                    {% endif %}
+                {% else %}
+                    <p>Word not found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
-
-   <script>
-       function flipFlashcard() {
-           var flashcard = document.querySelector('.flashcard');
-           flashcard.style.transform = flashcard.style.transform === 'rotateY(180deg)' ? 'rotateY(0deg)' : 'rotateY(180deg)';
-       }
-   </script>
+    <script>
+        function flipFlashcard() {
+            var flashcard = document.querySelector('.flashcard');
+            flashcard.style.transform = flashcard.style.transform === 'rotateY(180deg)' ? 'rotateY(0deg)' : 'rotateY(180deg)';
+        }
+    </script>
 </body>
 </html>
