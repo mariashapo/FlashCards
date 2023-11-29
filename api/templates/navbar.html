@@ -1,6 +1,6 @@
 {% macro create_navbar(location) %}
 	<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-		<a class="navbar-brand">Pablo&#38Gabriel</a>  {# Name of the app #}
+		<a class="navbar-brand">FlashCards</a>  {# Name of the app #}
 		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
 				aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
 			<span class="navbar-toggler-icon"></span>
@@ -8,18 +8,13 @@
 		<div class="collapse navbar-collapse" id="navbarColor01">
 				<ul class="navbar-nav me-auto">
 					<li class="nav-item">
-						<a class="nav-link {{'active' if location=='prime'}}" href="{{ url_for('prime_check')}}">
-							Prime Check
+						<a class="nav-link {{'active' if location=='add_word'}}" href="{{ url_for('add_word')}}">
+                            Add Word
 						</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link {{'active' if location=='github'}}" href="{{ url_for('github_check')}}">
-							GitHub User Info
-						</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link {{'active' if location=='nasa'}}" href="{{ url_for('nasa')}}">
-							Astronomy Picture of the Day
+						<a class="nav-link {{'active' if location=='display_words'}}" href="{{ url_for('display_words')}}">
+                            Display Words
 						</a>
 					</li>
 				</ul>

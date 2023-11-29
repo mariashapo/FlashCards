@@ -12,10 +12,15 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
+    return render_template("index.html")
+
+@app.route("/add_word")
+def add_word():
     return render_template("add_word.html")
 
-@app.route("/add_word", methods=["POST"])
-def add_word():
+
+@app.route("/display_words", methods=["POST"])
+def display_words():
     word = request.form.get("word")
     translation = request.form.get("translation")
      # Insert data into Supabase
@@ -23,9 +28,4 @@ def add_word():
     response = supabase.table("Flashcards").insert(data).execute()
     print(word)
     print(translation)
-    return render_template("display_words.html")
-
-
-@app.route("/display_words")
-def display_words():
     return render_template("display_words.html")
