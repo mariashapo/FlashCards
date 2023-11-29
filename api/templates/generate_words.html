@@ -1,0 +1,46 @@
+{% from "navbar.html" import create_navbar with context%}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+        <style>
+            .form-box {
+              max-width: 25vw; /* Adjust this value to your desired width */
+              margin: auto;
+              padding: 20px;
+              border: 1px solid #ddd;
+              border-radius: 10px;
+              margin-top: 20vh;
+            }
+            .form-background {
+                background-color: #3498db;
+            }
+            .page-background {
+                background-color: #dadbdc;
+            }
+          </style>
+	</head>
+<body class="page-background">
+    {{create_navbar("genetate_word", "form-background")}}
+   <div class="container">
+   <div class="row">
+   <div class="cool-md-12">
+   <div class="form-box form-background">
+       <h2 class="text-center">Input a topic</h2>
+   <form action="generated_words" method="post">
+
+       <div class="form-group">
+        <div style="text-align: center;">
+       <label for="topic" class="text-center" style="font-size: 30px;">Topic</label>
+        </div>
+       <input type="text" id="topic" class="form-control" name="topic" required>
+        </div>
+
+       <button type="submit"class="btn btn-primary btn-block" >Submit</button>
+   </form>
+    </div>
+    </div>
+    </div>
+    </div>
+</body>
+</html>
