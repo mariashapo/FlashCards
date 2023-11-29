@@ -1,16 +1,92 @@
 {% from "navbar.html" import create_navbar with context%}
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
-	</head>
-    <style>
-            .form-background {
-                background-color: #3498db;
-            }
-    </style>
-<body>
+<head>
+   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+   <style>
+       .body-stuff {
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           justify-content: center;
+           height: 100vh;
+           margin: 0;
+       }
+
+        .form-background {
+            background-color: #3498db;
+        }
+
+        .page-background {
+            background-color: #dadbdc;
+        }
+
+
+       .flashcard-container {
+           max-width: 30vw;
+           width: 100%;
+           margin-top: 20vh;
+       }
+
+
+       .flashcard {
+           width: 100%;
+           height: 33.3vh; /* Adjust height based on your content */
+           transform-style: preserve-3d;
+           transition: transform 0.5s;
+           cursor: pointer;
+       }
+
+       .centering {
+            margin: auto;
+       }
+
+       .front, .back {
+           position: absolute;
+           width: 100%;
+           height: 100%;
+           backface-visibility: hidden;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           font-size: 24px;
+           color: #fff;
+           background-color: #3498db;
+           border-radius: 8px;
+       }
+
+
+       .back {
+           transform: rotateY(180deg);
+       }
+   </style>
+</head>
+<body class="page-background text-center">
     {{create_navbar("display_words", "form-background")}}
-    <h1>Reached the display words page</h1>
+    <div class="container centering">
+   <div class="row">
+    <div class="col-xs-1" align="center">
+   <div class="flashcard-container" onclick="flipFlashcard()">
+       <div class="flashcard">
+           <div class="front">
+               <h2 style="color: #fff; font-size: 3.2vw;">Word</h2>
+           </div>
+           <div class="back" >
+               <h2 style="color: #fff; font-size: 3.2vw;">Translation</h2>
+           </div>
+       </div>
+   </div>
+   </div>
+   </div>
+   </div>
+   </div>
+
+
+   <script>
+       function flipFlashcard() {
+           var flashcard = document.querySelector('.flashcard');
+           flashcard.style.transform = flashcard.style.transform === 'rotateY(180deg)' ? 'rotateY(0deg)' : 'rotateY(180deg)';
+       }
+   </script>
 </body>
 </html>
