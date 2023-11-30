@@ -1,0 +1,39 @@
+{% from "navbar.html" import create_navbar with context %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+    <style>
+        .form-background {
+            background-color: #3498db;
+        }
+        .page-background {
+            background-color: #dadbdc;
+        }
+    </style>
+</head>
+<body class="page-background">
+    {{ create_navbar("index", "form-background") }}
+    <div class="container mt-4">
+        <h1 class="bg-success">Success</h1>
+        <h3>The following word-translation pairs were added to the database:</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Word</th>
+                    <th>Translation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pair in output_list %}
+                    <tr>
+                        <td>{{ pair.English }}</td>
+                        <td>{{ pair.Spanish }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
+

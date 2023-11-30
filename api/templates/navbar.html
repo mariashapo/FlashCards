@@ -13,6 +13,11 @@
 						</a>
 					</li>
 					<li class="nav-item">
+						<a class="nav-link {{'active' if location=='generate_words'}}" href="{{ url_for('generate_words')}}">
+                            Generate Words
+						</a>
+					</li>
+					<li class="nav-item">
 						<a class="nav-link {{'active' if location=='display_words'}}" href="{{ url_for('display_words')}}">
                             Display Words
 						</a>
