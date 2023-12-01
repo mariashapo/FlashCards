@@ -1,3 +1,25 @@
 api/__pycache__
 api/__pycache__/*
 api/test.py
+# Python-specific ignores
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtual environments
+venv/
+env/
+
+# IDE specific files
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Log and backup files
+*.log
+*.bak
+*.tmp
