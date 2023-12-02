@@ -146,6 +146,7 @@ a {
 
 <body class="page-background text-center">
     <input type="hidden" id="current_element_number" value=0>
+    <input type="hidden" id="words_list" value="{{ words }}">
     {{ create_navbar("display_words", "form-background") }}
     
     <div class="container centering">
@@ -156,14 +157,14 @@ a {
                 </div>
             </div>
             <div class="col-6" align="center">
-                {% if element_n != -1 %}
+                {% if first_pair %}
                 <div class="flashcard-container" onclick="flipFlashcard()">
                     <div class="flashcard">
                         <div class="front">
-                            <h2 id="word1" style="color: #fff; font-size: 3.2vw;">{{ words[element_n].word1 }}</h2> <!-- Display the word -->
+                            <h2 id="word1" style="color: #fff; font-size: 3.2vw;">{{ first_pair.word1 }}</h2> <!-- Display the word -->
                         </div>
                         <div class="back">
-                            <h2 id="word2" style="color: #fff; font-size: 3.2vw;">{{ words[element_n].word2 }}</h2>
+                            <h2 id="word2" style="color: #fff; font-size: 3.2vw;">{{ first_pair.word2 }}</h2>
                             <!-- Display the translation -->
                         </div>
                     </div>
@@ -189,58 +190,38 @@ a {
 
         function goToNextCard() {
             let current_element_number = document.getElementById("current_element_number").value;
+            let words_list = JSON.parse(document.getElementById("words_list").value);
             flashcard = document.querySelector('.flashcard');
             //flashcard.classList.add("fade");
-            fetch('/next_word', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({current_element_number: current_element_number}),
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Update all the necessary fields
-                document.getElementById("word1").innerText = data.list_of_words[data.element_n].word1;
-                document.getElementById("word2").innerText = data.list_of_words[data.element_n].word2;
+            let new_element_number = Number(current_element_number) + 1;
+            document.getElementById("word1").innerText = words_list[new_element_number].word1;
+            document.getElementById("word2").innerText = words_list[new_element_number].word2;
 
-                if (data.element_n == 1) // new element will not be the first
-                    document.getElementById("goToNextCardButton").style.display = "block";
+            if (new_element_number == 1) // next element is the second element
+                document.getElementById("goToPreviousCardButton").style.display = "block";
 
-                document.getElementById("current_element_number").value = data.element_n;
-
-                if (data.element_n == data.list_of_words.length - 1) // new element is the last
-                    document.getElementById("goToNextCardButton").style.display = "none";
-
-            })
+            if (new_element_number == words_list.length - 1) // new element is the last
+                document.getElementById("goToNextCardButton").style.display = "none";
+            document.getElementById("current_element_number").value = new_element_number;
         }
 
         function goToPreviousCard() {
             let current_element_number = document.getElementById("current_element_number").value;
+            let words_list = JSON.parse(document.getElementById("words_list").value);
             flashcard = document.querySelector('.flashcard');
             //flashcard.classList.add("fade");
-            fetch('/next_word', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({current_element_number: current_element_number}),
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Update all the necessary fields
-                document.getElementById("word1").innerText = data.list_of_words[data.element_n].word1;
-                document.getElementById("word2").innerText = data.list_of_words[data.element_n].word2;
+            let previous_element_number = Number(current_element_number) - 1;
+            document.getElementById("word1").innerText = words_list[previous_element_number].word1;
+            document.getElementById("word2").innerText = words_list[previous_element_number].word2;
 
-                if (data.element_n == 0) // new element will not be the first
-                    document.getElementById("goToNextCardButton").style.display = "block";
+            if (previous_element_number == 0) // previous element is the first
+                document.getElementById("goToPreviousCardButton").style.display = "none";
 
-                document.getElementById("current_element_number").value = data.element_n;
-
-                if (data.element_n == data.list_of_words.length - 1) // new element is the last
-                    document.getElementById("goToNextCardButton").style.display = "none";
-
-            })
+            if (current_element_number == words_list.length - 1) // current element is the last
+                document.getElementById("goToNextCardButton").style.display = "block";
+            console.log(current_element_number);
+            console.log(words_list.length);
+            document.getElementById("current_element_number").value = previous_element_number;
         }
     </script>
 </body>
