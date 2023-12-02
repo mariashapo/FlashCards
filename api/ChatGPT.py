@@ -1,4 +1,5 @@
 import ast
+
 import openai
 
 
@@ -24,9 +25,7 @@ def query(topic, current_vocab):
 
     try:
         response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=prompt,
-            max_tokens=2500
+            engine="text-davinci-003", prompt=prompt, max_tokens=2500
         )
         response_text = response.choices[0].text.strip()
     except Exception as e:
