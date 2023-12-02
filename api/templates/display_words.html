@@ -145,26 +145,25 @@ a {
     </head>
 
 <body class="page-background text-center">
+    <input type="hidden" id="current_element_number" value=0>
     {{ create_navbar("display_words", "form-background") }}
-
+    
     <div class="container centering">
         <div class="row">
             <div class="col">
-                {% if current_id and current_id != 1 %}
-                    <div style="text-align: right;">
-                        <p><a href="{{ url_for('display_word', word_id=current_id-1) }}"><span class="arrow left"></span></a></p>
-                    </div>
-                {% endif %}
+                <div id="goToPreviousCardButton" style="text-align: right; display: none;">
+                    <p onclick="goToPreviousCard()"><span class="arrow left"></span></p>
+                </div>
             </div>
             <div class="col-6" align="center">
-                {% if record %}
+                {% if element_n != -1 %}
                 <div class="flashcard-container" onclick="flipFlashcard()">
                     <div class="flashcard">
                         <div class="front">
-                            <h2 style="color: #fff; font-size: 3.2vw;">{{ record.word1 }}</h2> <!-- Display the word -->
+                            <h2 id="word1" style="color: #fff; font-size: 3.2vw;">{{ words[element_n].word1 }}</h2> <!-- Display the word -->
                         </div>
                         <div class="back">
-                            <h2 style="color: #fff; font-size: 3.2vw;">{{ record.word2 }}</h2>
+                            <h2 id="word2" style="color: #fff; font-size: 3.2vw;">{{ words[element_n].word2 }}</h2>
                             <!-- Display the translation -->
                         </div>
                     </div>
@@ -175,12 +174,9 @@ a {
                 {% endif %}
             </div>
             <div class="col" align="center">
-
-                {% if next_id %}
-                    <div style="text-align: left;">
-                        <p><a href="{{ url_for('display_word', word_id=next_id) }}"><span class="arrow right"></span></a></p>
-                    </div>
-                {% endif %}
+                <div id="goToNextCardButton" style="text-align: left;">
+                    <p onclick="goToNextCard()"><span class="arrow right"></a></p>
+                </div>
             </div>
         </div>
     </div>
@@ -189,6 +185,62 @@ a {
         function flipFlashcard() {
             var flashcard = document.querySelector('.flashcard');
             flashcard.style.transform = flashcard.style.transform === 'rotateY(180deg)' ? 'rotateY(0deg)' : 'rotateY(180deg)';
+        }
+
+        function goToNextCard() {
+            let current_element_number = document.getElementById("current_element_number").value;
+            flashcard = document.querySelector('.flashcard');
+            //flashcard.classList.add("fade");
+            fetch('/next_word', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({current_element_number: current_element_number}),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update all the necessary fields
+                document.getElementById("word1").innerText = data.list_of_words[data.element_n].word1;
+                document.getElementById("word2").innerText = data.list_of_words[data.element_n].word2;
+
+                if (data.element_n == 1) // new element will not be the first
+                    document.getElementById("goToNextCardButton").style.display = "block";
+
+                document.getElementById("current_element_number").value = data.element_n;
+
+                if (data.element_n == data.list_of_words.length - 1) // new element is the last
+                    document.getElementById("goToNextCardButton").style.display = "none";
+
+            })
+        }
+
+        function goToPreviousCard() {
+            let current_element_number = document.getElementById("current_element_number").value;
+            flashcard = document.querySelector('.flashcard');
+            //flashcard.classList.add("fade");
+            fetch('/next_word', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({current_element_number: current_element_number}),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update all the necessary fields
+                document.getElementById("word1").innerText = data.list_of_words[data.element_n].word1;
+                document.getElementById("word2").innerText = data.list_of_words[data.element_n].word2;
+
+                if (data.element_n == 0) // new element will not be the first
+                    document.getElementById("goToNextCardButton").style.display = "block";
+
+                document.getElementById("current_element_number").value = data.element_n;
+
+                if (data.element_n == data.list_of_words.length - 1) // new element is the last
+                    document.getElementById("goToNextCardButton").style.display = "none";
+
+            })
         }
     </script>
 </body>

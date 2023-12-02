@@ -1,7 +1,7 @@
 import ast
 
 import openai
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, redirect, render_template, request, url_for, jsonify
 from supabase import Client, create_client
 
 # Supabase credentials
@@ -67,11 +67,28 @@ def generated_words():
 
 @app.route("/display_words")
 def display_words():
-    first_record = (
-        supabase.table("Flashcards").select("id").order("id").limit(1).execute().data
+    #first_record = (
+    #    supabase.table("Flashcards").select("id").order("id").limit(1).execute().data
+    #)
+    words_list = (
+        supabase.table("Flashcards").select("*").execute().data
     )
-    first_id = first_record[0]["id"]
-    return redirect(url_for("display_word", word_id=first_id))
+    print(words_list)
+    element_n = 0 if len(words_list) > 0 else -1
+    return render_template("display_words.html", words = words_list, element_n = element_n, size_of_list = len(words_list))  # Start displaying the first element of the list
+
+
+@app.route("/next_word", methods=["POST"])
+def get_next_word():
+    words_list = (
+        supabase.table("Flashcards").select("*").execute().data
+    )
+    data = request.get_json()
+    element_number = data.get('current_element_number')
+    print(element_number)
+
+    return jsonify({'element_n': int(element_number) + 1, 'list_of_words': words_list})
+
 
 
 @app.route("/display_word/<int:word_id>")
