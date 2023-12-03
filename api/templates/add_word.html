@@ -1,53 +1,62 @@
-{% from "navbar.html" import create_navbar with context%}
+{% from "navbar.html" import create_navbar with context %}
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
-        <style>
-            .form-box {
-              max-width: 25vw; /* Adjust this value to your desired width */
-              margin: auto;
-              padding: 20px;
-              border: 1px solid #ddd;
-              border-radius: 10px;
-              margin-top: 20vh;
-            }
-            .form-background {
-                background-color: #3498db;
-            }
-            .page-background {
-                background-color: #dadbdc;
-            }
-          </style>
-	</head>
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+    <style>
+        .form-box {
+            max-width: 25vw; /* Adjust this value to your desired width */
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-top: 20vh;
+        }
+        .form-background {
+            background-color: #3498db;
+        }
+        .page-background {
+            background-color: #dadbdc;
+        }
+    </style>
+</head>
 <body class="page-background">
-    {{create_navbar("add_word", "form-background")}}
-   <div class="container">
-   <div class="row">
-   <div class="cool-md-12">
-   <div class="form-box form-background">
-       <h2 class="text-center">Add Word and Translation</h2>
-   <form action="added_word" method="post">
-       <div class="form-group">
-        <div style="text-align: center;">
-       <label for="word" class="text-center" style="font-size: 30px;">Word</label>
-        </div>
-       <input type="text" id="word" class="form-control" name="word" required>
-        </div>
+    {{ create_navbar("add_word", "form-background") }}
+    <div class="container">
+        <div class="row">
+            <div class="cool-md-12">
+                <div class="form-box form-background">
+                    <h2 class="text-center">Add Word and Translation</h2>
+                    <form action="{{ url_for('added_word') }}" method="post">
+                        <div class="form-group">
+                            <div style="text-align: center;">
+                                <label for="word" class="text-center" style="font-size: 30px;">Word</label>
+                            </div>
+                            <input type="text" id="word" class="form-control" name="word" required>
+                        </div>
 
-       <div class="form-group">
-        <div style="text-align: center;">
-       <label for="translation" class="text-center" style="font-size: 30px;">Translation</label>
-        </div>
-       <input type="text" id="translation" class="form-control" name="translation" required>
-        </div>
+                        <div class="form-group">
+                            <div style="text-align: center;">
+                                <label for="translation" class="text-center" style="font-size: 30px;">Translation</label>
+                            </div>
+                            <input type="text" id="translation" class="form-control" name="translation" required>
+                        </div>
 
+                        <!-- Topic Selection Dropdown -->
+                        <div class="form-group">
+                            <label for="topic" class="form-label mt-4">Select Topic</label>
+                            <select class="form-select" id="topic" name="topic">
+                                {% for topic in topics_list %}
+                                <option value="{{ topic.id }}">{{ topic.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-       <button type="submit"class="btn btn-primary btn-block" >Submit</button>
-   </form>
-    </div>
-    </div>
-    </div>
+                        <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
