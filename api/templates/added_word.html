@@ -1,20 +1,29 @@
-{% from "navbar.html" import create_navbar with context%}
+{% from "navbar.html" import create_navbar with context %}
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
     <style>
-            .form-background {
-                background-color: #3498db;
-            }
-            .page-background {
-                background-color: #dadbdc;
-            }
-          </style>
-	</head>
+        .form-background {
+            background-color: #3498db;
+        }
+        .page-background {
+            background-color: #dadbdc;
+        }
+    </style>
+</head>
 <body class="page-background">
-    {{create_navbar("index", "form-background")}}
-    <h1 class="bg-success">Success</h1>
-    <h3>The word-translation pair: {{word}}-{{translation}} was added to the set {{topic_name}}</h3>
+    {{ create_navbar("index", "form-background") }}
+    <div class="container text-center mt-4">
+        <h1 class="bg-success">Success</h1>
+        <h3>The word-translation pair: {{ word }}-{{ translation }} was added to the set {{ topic_name }}</h3>
+
+        <!-- Add Another Word Button -->
+        <a href="{{ url_for('add_word') }}" class="btn btn-primary mt-3">Add Another Word</a>
+
+        <!-- Preview Words Button -->
+        <!-- Replace 'preview_words' with the actual route for previewing words -->
+        <a href="{{ url_for('display_words') }}" class="btn btn-secondary mt-3">Preview Words</a>
+    </div>
 </body>
 </html>
