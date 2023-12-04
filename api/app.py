@@ -18,25 +18,32 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 app = Flask(__name__)
 
+
 @app.route("/")
 def index():
+    return render_template("index.html")
+
+@app.route("/topics")
+def topics():
     # Fetch all topics from the Topics table
     topics_data = supabase.table("Topics").select("id, name").execute()
 
     # If the response contains data, convert it to a list of dictionaries
     if topics_data.data:
-        topics_list = [{"id": topic["id"], "name": topic["name"]} for topic in topics_data.data]
+        topics_list = [
+            {"id": topic["id"], "name": topic["name"]} for topic in topics_data.data
+        ]
     else:
         topics_list = []
 
     # Render the index template and pass the topics list
-    return render_template("index.html", topics_list=topics_list)
+    return render_template("topics.html", topics_list=topics_list)
 
 
-@app.route('/add_new_topic', methods=['POST'])
+@app.route("/add_new_topic", methods=["POST"])
 def add_new_topic():
     # Get the new topic name from the request form data
-    new_topic_name = request.form.get('newTopicName')
+    new_topic_name = request.form.get("newTopicName")
 
     # Check if the 'newTopicName' field is missing in the request data
     if new_topic_name is None:
@@ -45,32 +52,37 @@ def add_new_topic():
     # Validate that the new topic name is not empty or null
     if not new_topic_name.strip():
         return jsonify({"error": "Topic name cannot be empty"}), 400
-    
-    max_id_result = supabase.rpc('max_id', params={}).execute()
-    max_id=max_id_result.data
+
+    max_id_result = supabase.rpc("max_id", params={}).execute()
+    max_id = max_id_result.data
 
     # Insert the new topic into the database
     # This is an example; adjust according to your database schema
     print(new_topic_name)
-    insert_result = supabase.table("Topics").insert({"id":max_id+1,"name": new_topic_name}).execute()
+    insert_result = (
+        supabase.table("Topics")
+        .insert({"id": max_id + 1, "name": new_topic_name})
+        .execute()
+    )
 
     # Retrieve the ID of the new topic (adjust based on how your DB returns this information)
-    new_topic_id = insert_result.data[0]['id'] if insert_result.data else None
+    new_topic_id = insert_result.data[0]["id"] if insert_result.data else None
 
     # Return the new topic's ID and name in a JSON response
-    return jsonify({'id': new_topic_id, 'name': new_topic_name})
+    return jsonify({"id": new_topic_id, "name": new_topic_name})
 
-@app.route('/add_word')
+
+@app.route("/add_word")
 def add_word():
     # Call the custom SQL function using rpc with an empty params argument
-    #response = supabase.rpc('get_distinct_topic_ids', params={}).execute()
+    # response = supabase.rpc('get_distinct_topic_ids', params={}).execute()
 
     # Fetch corresponding topic names from Topics table
     topics_data = supabase.table("Topics").select("id, name").execute()
-    topics = {topic['id']: topic['name'] for topic in topics_data.data}
+    topics = {topic["id"]: topic["name"] for topic in topics_data.data}
 
     # Filter only the names of the topics that are used in Flashcards
-    topics_list = [{'id': topic_id, 'name': topics[topic_id]} for topic_id in topics]
+    topics_list = [{"id": topic_id, "name": topics[topic_id]} for topic_id in topics]
 
     # Render the template and pass the topics list
     return render_template("add_word.html", topics_list=topics_list)
@@ -87,7 +99,7 @@ def added_word():
     translation = request.form.get("translation")
     topic_id = request.form.get("topic")
     topic_data = supabase.table("Topics").select("name").eq("id", topic_id).execute()
-    topic_name=topic_data.data[0]['name']
+    topic_name = topic_data.data[0]["name"]
     # Insert data into Supabase
     data = {"word1": word, "word2": translation, "topic_id": topic_id}
     response = supabase.table("Flashcards").insert(data).execute()
@@ -95,7 +107,9 @@ def added_word():
         response.data[0]["word1"]
     except (TypeError, AttributeError):
         print("Error adding flash cards to database.")
-    return render_template("added_word.html", word=word, translation=translation, topic_name=topic_name)
+    return render_template(
+        "added_word.html", word=word, translation=translation, topic_name=topic_name
+    )
 
 
 @app.route("/generated_words", methods=["POST"])

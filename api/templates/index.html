@@ -1,113 +1,19 @@
-{% from "navbar.html" import create_navbar with context %}
+{% from "navbar.html" import create_navbar with context%}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+    <head>
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
     <style>
-        .form-background {
-            background-color: #3498db;
-        }
-        .page-background {
-            background-color: #dadbdc;
-        }
-        .topic-list {
-            margin: 20px;
-        }
-    </style>
-</head>
-</head>
-<body class="page-background">
-    {{ create_navbar("index", "form-background") }}
-    <div class="container">
-        <h1>Index Page</h1>
-        <div class="topic-list">
-            <h2>Current Topics</h2>
-            <ul>
-                {% for topic in topics_list %}
-                <li>{{ topic.name }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        <div>
-            <h2>Add New Topic</h2>
-            <!-- Button to trigger modal -->
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTopicModal">
-                Add New Topic
-            </button>
-            
-            <!-- Modal -->
-            <div class="modal fade" id="addTopicModal" tabindex="-1" aria-labelledby="addTopicModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="addTopicModalLabel">Add New Topic</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <!-- Form inside modal -->
-                            <form id="addTopicForm" action="{{ url_for('add_new_topic') }}" method="post">
-                                <div class="mb-3">
-                                    <label for="newTopicName" class="form-label">Topic Name</label>
-                                    <input type="text" class="form-control" id="newTopicName" name="newTopicName" required>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Add Topic</button>
-                            </form>
-                            
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Bootstrap JS Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var addTopicForm = document.getElementById('addTopicForm');
-        var newTopicNameInput = document.getElementById('newTopicName');
-        var topicsList = document.querySelector('.topic-list ul');
-        var addTopicModal = new bootstrap.Modal(document.getElementById('addTopicModal'));
-
-        addTopicForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent default form submission
-            var topicName = newTopicNameInput.value;
-            if (!topicName) {
-                alert('Please enter a topic name.'); // Add user-friendly validation
-                return;
+            .form-background {
+                background-color: #3498db;
             }
-
-            // Create a FormData object to send form data
-            var formData = new FormData();
-            formData.append('newTopicName', topicName);
-
-            fetch('{{ url_for('add_new_topic') }}', {
-                method: 'POST',
-                body: formData,
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    console.error('Error:', data.error);
-                    alert('Error: ' + data.error); // Display error to the user
-                } else {
-                    // Add the new topic to the list on the page
-                    var newTopicItem = document.createElement('li');
-                    newTopicItem.textContent = data.name;
-                    topicsList.appendChild(newTopicItem);
-
-                    // Clear the input field
-                    newTopicNameInput.value = '';
-
-                    // Manually close the modal using JavaScript
-                    addTopicModal.hide();
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again later.'); // Display a generic error to the user
-            });
-        });
-    });
-</script>
+            .page-background {
+                background-color: #dadbdc;
+            }
+          </style>
+	</head>
+<body class="page-background">
+    {{create_navbar("index", "form-background")}}
+    <h1>Index page</h1>
 </body>
 </html>
