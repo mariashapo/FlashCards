@@ -61,17 +61,14 @@ def add_new_topic():
 @app.route('/add_word')
 def add_word():
     # Call the custom SQL function using rpc with an empty params argument
-    response = supabase.rpc('get_distinct_topic_ids', params={}).execute()
-
-    # Extract topic_ids from the response
-    unique_topic_ids = [row for row in response.data]
+    #response = supabase.rpc('get_distinct_topic_ids', params={}).execute()
 
     # Fetch corresponding topic names from Topics table
     topics_data = supabase.table("Topics").select("id, name").execute()
     topics = {topic['id']: topic['name'] for topic in topics_data.data}
 
     # Filter only the names of the topics that are used in Flashcards
-    topics_list = [{'id': topic_id, 'name': topics[topic_id]} for topic_id in unique_topic_ids if topic_id in topics]
+    topics_list = [{'id': topic_id, 'name': topics[topic_id]} for topic_id in topics]
 
     # Render the template and pass the topics list
     return render_template("add_word.html", topics_list=topics_list)

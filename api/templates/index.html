@@ -66,6 +66,7 @@
         var addTopicForm = document.getElementById('addTopicForm');
         var newTopicNameInput = document.getElementById('newTopicName');
         var topicsList = document.querySelector('.topic-list ul');
+        var addTopicModal = new bootstrap.Modal(document.getElementById('addTopicModal'));
 
         addTopicForm.addEventListener('submit', function(e) {
             e.preventDefault(); // Prevent default form submission
@@ -94,10 +95,11 @@
                     newTopicItem.textContent = data.name;
                     topicsList.appendChild(newTopicItem);
 
-                    // Clear the input field and close the modal
+                    // Clear the input field
                     newTopicNameInput.value = '';
-                    var modal = new bootstrap.Modal(document.getElementById('addTopicModal'));
-                    modal.hide();
+
+                    // Manually close the modal using JavaScript
+                    addTopicModal.hide();
                 }
             })
             .catch(error => {
@@ -107,6 +109,5 @@
         });
     });
 </script>
-
 </body>
 </html>
