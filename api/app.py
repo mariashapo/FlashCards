@@ -4,7 +4,7 @@ import openai
 from flask import Flask, redirect, render_template, request, url_for, jsonify, flash 
 from supabase import Client, create_client
 import json
-from flask_login import LoginManager, login_required, UserMixin
+from flask_login import LoginManager, login_required, UserMixin, login_user
 
 # Supabase credentials
 SUPABASE_URL = "https://qfgwfjebnbvfijeaejza.supabase.co"
@@ -24,11 +24,16 @@ login_manager.login_view = 'login'
 login_manager.init_app(app)
 
 
+class SimpleUser(UserMixin):
+    def __init__(self, user_id):
+        self.id = user_id
+
+
 @login_manager.user_loader
 def load_user(user_id):
     """ Takes a user ID and returns a user object or None if the user does not exist."""
     if user_id is not None:
-        return 1
+        return SimpleUser(user_id)
     return None
 
 
@@ -47,13 +52,18 @@ def index():
         data = {"username": username, "password": password}
         response = supabase.table("Users").select("*").eq("username", username).execute()
         try:
+            print("Hey")
             if response.data[0]["password"] == password:
+                login_user(SimpleUser(str(response.data[0]["id"])))
                 return render_template("index.html", username = username)
             else:
                 flash("Incorrect password")
                 return redirect("login")
-        except (TypeError, AttributeError):
-            print("Error restrieving data")
+        #except (TypeError, AttributeError):
+        except Exception as e:
+            print(e)
+            flash("The user was not found")
+            return redirect("login")
     return render_template("index.html", username = None)
 
 
