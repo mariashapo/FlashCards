@@ -4,7 +4,7 @@ import openai
 from flask import Flask, redirect, render_template, request, url_for, jsonify, flash 
 from supabase import Client, create_client
 import json
-from flask_login import LoginManager, login_required, UserMixin, login_user
+from flask_login import LoginManager, login_required, UserMixin, login_user, logout_user
 
 # Supabase credentials
 SUPABASE_URL = "https://qfgwfjebnbvfijeaejza.supabase.co"
@@ -49,7 +49,6 @@ def index():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        data = {"username": username, "password": password}
         response = supabase.table("Users").select("*").eq("username", username).execute()
         try:
             print("Hey")
@@ -59,9 +58,7 @@ def index():
             else:
                 flash("Incorrect password")
                 return redirect("login")
-        #except (TypeError, AttributeError):
-        except Exception as e:
-            print(e)
+        except (TypeError, AttributeError, IndexError):
             flash("The user was not found")
             return redirect("login")
     return render_template("index.html", username = None)
@@ -86,6 +83,15 @@ def login():
             print("Error adding flash cards to database.")
 
     return render_template("login.html")
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    """Route used to allow users to logout."""
+    logout_user()
+    flash("You successfully logged out")
+    return redirect(url_for('login'))
 
 
 @app.route("/add_word")
