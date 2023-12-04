@@ -4,7 +4,7 @@ import openai
 from flask import Flask, redirect, render_template, request, url_for, jsonify, flash 
 from supabase import Client, create_client
 import json
-from flask_login import LoginManager, login_required
+from flask_login import LoginManager, login_required, UserMixin
 
 # Supabase credentials
 SUPABASE_URL = "https://qfgwfjebnbvfijeaejza.supabase.co"
@@ -39,9 +39,22 @@ def unauthorized():
     return redirect(url_for('login'))
 
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
-    return render_template("index.html")
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        data = {"username": username, "password": password}
+        response = supabase.table("Users").select("*").eq("username", username).execute()
+        try:
+            if response.data[0]["password"] == password:
+                return render_template("index.html", username = username)
+            else:
+                flash("Incorrect password")
+                return redirect("login")
+        except (TypeError, AttributeError):
+            print("Error restrieving data")
+    return render_template("index.html", username = None)
 
 
 @app.route("/signup", methods=['GET', 'POST'])
