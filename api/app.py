@@ -1,9 +1,10 @@
 import ast
 
 import openai
-from flask import Flask, redirect, render_template, request, url_for, jsonify
+from flask import Flask, redirect, render_template, request, url_for, jsonify, flash 
 from supabase import Client, create_client
 import json
+from flask_login import LoginManager, login_required
 
 # Supabase credentials
 SUPABASE_URL = "https://qfgwfjebnbvfijeaejza.supabase.co"
@@ -16,7 +17,26 @@ SUPABASE_ANON_KEY = (
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+login_manager = LoginManager()
 app = Flask(__name__)
+app.secret_key = 'dev'
+login_manager.login_view = 'login'
+login_manager.init_app(app)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    """ Takes a user ID and returns a user object or None if the user does not exist."""
+    if user_id is not None:
+        return 1
+    return None
+
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    """Redirect unauthorized users to Login page."""
+    flash('You must be logged in to view that page.')
+    return redirect(url_for('login'))
 
 
 @app.route("/")
@@ -24,17 +44,41 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/signup", methods=['GET', 'POST'])
+def signup():
+    return render_template("signup.html")
+
+
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        data = {"username": username, "password": password}
+        response = supabase.table("Users").insert(data).execute()
+        try:
+            response.data[0]["username"]
+            flash(f'User: {username} was properly registered')
+        except (TypeError, AttributeError):
+            print("Error adding flash cards to database.")
+
+    return render_template("login.html")
+
+
 @app.route("/add_word")
+@login_required
 def add_word():
     return render_template("add_word.html")
 
 
 @app.route("/generate_words")
+@login_required
 def generate_words():
     return render_template("generate_words.html")
 
 
 @app.route("/added_word", methods=["POST"])
+@login_required
 def added_word():
     word = request.form.get("word")
     translation = request.form.get("translation")
@@ -49,6 +93,7 @@ def added_word():
 
 
 @app.route("/generated_words", methods=["POST"])
+@login_required
 def generated_words():
     topic = request.form.get("topic")
     current_vocab_pairs = supabase.table("Flashcards").select("word1").execute().data
@@ -67,6 +112,7 @@ def generated_words():
 
 
 @app.route("/display_words")
+@login_required
 def display_words():
     words_list = (
         supabase.table("Flashcards").select("*").execute().data
