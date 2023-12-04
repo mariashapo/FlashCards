@@ -135,12 +135,12 @@ def test_generated_words_route(client, mock_openai_api, mock_supabase):
     assert response.status_code == 200
 
 
-#def test_display_words_route(client, mock_supabase):
+# def test_display_words_route(client, mock_supabase):
 #    response = client.get("/display_words")
 #    assert response.status_code == 302  # Should redirect
 
 
-#def test_display_word_route(client, mock_supabase):
+# def test_display_word_route(client, mock_supabase):
 #    response = client.get("/display_word/1")
 #    assert response.status_code == 200
 
