@@ -1,7 +1,9 @@
 import ast
 import openai
-from flask import Flask, redirect, render_template, request, url_for, jsonify
+from flask import Flask, render_template, request, jsonify
 from supabase import Client, create_client
+import random
+import json
 
 # Supabase credentials
 SUPABASE_URL = "https://qfgwfjebnbvfijeaejza.supabase.co"
@@ -116,30 +118,14 @@ def generated_words():
 
 @app.route("/display_words")
 def display_words():
-    first_record = (
-        supabase.table("Flashcards").select("id").order("id").limit(1).execute().data
-    )
-    first_id = first_record[0]["id"]
-    return redirect(url_for("display_word", word_id=first_id))
-
-
-@app.route("/display_word/<int:word_id>")
-def display_word(word_id):
-    table = "Flashcards"
-    record = supabase.table(table).select("*").eq("id", word_id).execute().data
-    next_record = (
-        supabase.table(table)
-        .select("id")
-        .gt("id", word_id)
-        .order("id")
-        .limit(1)
-        .execute()
-        .data
-    )
-    next_id = next_record[0]["id"] if next_record else None
+    words_list = supabase.table("Flashcards").select("*").execute().data
+    if len(words_list) == 0:
+        first_pair = None
+    else:
+        first_pair = words_list[0]
     return render_template(
-        "display_words.html", record=record[0], next_id=next_id, current_id=word_id
-    )
+        "display_words.html", words=json.dumps(words_list), first_pair=first_pair
+    )  # Start displaying the first element of the list
 
 
 def query(topic, current_vocab):
@@ -177,3 +163,94 @@ def query(topic, current_vocab):
         print(f"Error in parsing response: {e}")
 
     return response_data
+
+
+@app.route("/study_session/<int:word_id>")
+def study_session(word_id):
+    # Fetch the word details based on the provided word_id
+    word_details = (
+        supabase.table("Flashcards")
+        .select("id", "word1", "word2")
+        .eq("id", word_id)
+        .execute()
+        .data
+    )
+
+    if not word_details:
+        # Handle the case when the word with the specified ID is not found
+        return render_template("word_not_found.html")
+
+    # Extract the word details
+    record = word_details[0]
+    correct_word = record["word2"]
+
+    # Fetch three additional random word2 translations (excluding the correct word)
+    random_words_data = (
+        supabase.table("Flashcards")
+        .select("word2")
+        .neq("word2", correct_word)
+        .order("id")  # Use a unique field like 'id' for randomness
+        .limit(3)
+        .execute()
+        .data
+    )
+
+    # Extract the random words
+    random_words = [word_data["word2"] for word_data in random_words_data]
+
+    # Include the correct word in the options
+    options = [correct_word] + random_words
+
+    # Shuffle the options
+    random.shuffle(options)
+
+    # Pass data to the template, including word_id
+    return render_template(
+        "study_session.html",
+        word=record["word1"],
+        options=options,
+        word_id=record["id"],
+    )
+
+
+@app.route("/get_correct_option/<int:word_id>", methods=["GET"])
+def get_correct_option(word_id):
+    # Fetch the correct option (word2) for the given word_id
+    correct_option = (
+        supabase.table("Flashcards")
+        .select("word2")
+        .eq("id", word_id)
+        .limit(1)
+        .execute()
+        .data
+    )
+
+    if not correct_option:
+        return jsonify({"error": "Word not found"}), 404
+
+    return jsonify({"correct_option": correct_option[0]["word2"]})
+
+
+@app.route("/get_next_word/<int:current_id>", methods=["GET"])
+def get_next_word(current_id):
+    # Mark the current word as learned
+    supabase.table("Flashcards").update({"learned": True}).eq(
+        "id", current_id
+    ).execute()
+
+    # Fetch a random word that the user has not learned yet
+    record = (
+        supabase.table("Flashcards")
+        .select("*")
+        .eq("learned", False)
+        .order("id")  # Use a unique field like 'id' for randomness
+        .limit(1)
+        .execute()
+        .data
+    )
+
+    if not record:
+        # Handle the case when there are no more words
+        return jsonify({"message": "No more words"}), 404
+
+    return jsonify({"id": record[0]["id"]})

@@ -1,0 +1,107 @@
+{% from "navbar.html" import create_navbar with context%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+    <style>
+        .body-stuff {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .form-background {
+            background-color: #3498db;
+        }
+
+        .page-background {
+            background-color: #dadbdc;
+        }
+
+        .translate-prompt {
+            color: #fff;
+            font-size: 3.2vw;
+            margin-bottom: 20px;
+        }
+
+        .card-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-button {
+            width: 100px; /* Adjust the width as needed */
+            height: 100px; /* Adjust the height as needed */
+            margin: 0 10px; /* Adjust the margin as needed */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #fff;
+            background-color: #3498db;
+            border-radius: 8px;
+            border: none;
+        }
+
+        .centering {
+            margin: auto;
+        }
+    </style>
+    <title>Study Session</title>
+</head>
+<body class="page-background text-center">
+    {{ create_navbar("study_session", "form-background") }}
+    <div class="container centering">
+        <div class="row">
+            <div class="col-12" align="center">
+                <h2 class="translate-prompt">Translate the word: {{ word }}</h2>
+                <div class="card-container">
+                    <form>
+                        {% for option in options %}
+                            <button class="card-button" type="button" onclick="checkTranslation('{{ option }}', {{ word_id }})">{{ option }}</button>
+                        {% endfor %}
+                    </form>
+                </div>
+
+                {% if correct %}
+                    <p style="color: green; font-size: 20px;">Correct! Well done!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkTranslation(selectedOption, wordId) {
+            // Fetch the correct option from the server (you need to implement this logic in your Flask route)
+            console.log('Fetching correct option for Word ID:', wordId);
+            fetch(`/get_correct_option/${wordId}`)
+                .then(response => response.json())
+                .then(correctData => {
+                    // Your logic to check if the selected option is correct
+                    var isCorrect = selectedOption === correctData.correct_option;
+    
+                    if (isCorrect) {
+                        alert('Correct! Well done!');
+                        // Redirect to the next word only if the translation is correct
+                        fetch(`/get_next_word/${wordId}`)
+                            .then(response => response.json())
+                            .then(nextData => {
+                                if (nextData.id) {
+                                    window.location.href = `/study_session/${nextData.id}`;
+                                } else {
+                                    window.location.href = "/no_more_words";
+                                }
+                            });
+                    } else {
+                        alert('Wrong! Try again.');
+                    }
+                });
+        }
+    </script>
+</body>
+</html>
