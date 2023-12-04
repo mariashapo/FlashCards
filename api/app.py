@@ -3,6 +3,7 @@ import openai
 from flask import Flask, redirect, render_template, request, url_for, jsonify
 from supabase import Client, create_client
 import random
+import json
 
 # Supabase credentials
 SUPABASE_URL = "https://qfgwfjebnbvfijeaejza.supabase.co"
@@ -67,30 +68,14 @@ def generated_words():
 
 @app.route("/display_words")
 def display_words():
-    first_record = (
-        supabase.table("Flashcards").select("id").order("id").limit(1).execute().data
+    words_list = (
+        supabase.table("Flashcards").select("*").execute().data
     )
-    first_id = first_record[0]["id"]
-    return redirect(url_for("display_word", word_id=first_id))
-
-
-@app.route("/display_word/<int:word_id>")
-def display_word(word_id):
-    table = "Flashcards"
-    record = supabase.table(table).select("*").eq("id", word_id).execute().data
-    next_record = (
-        supabase.table(table)
-        .select("id")
-        .gt("id", word_id)
-        .order("id")
-        .limit(1)
-        .execute()
-        .data
-    )
-    next_id = next_record[0]["id"] if next_record else None
-    return render_template(
-        "display_words.html", record=record[0], next_id=next_id, current_id=word_id
-    )
+    if len(words_list) == 0:
+        first_pair = None
+    else:
+        first_pair = words_list[0]
+    return render_template("display_words.html", words = json.dumps(words_list), first_pair = first_pair)  # Start displaying the first element of the list
 
 
 def query(topic, current_vocab):
