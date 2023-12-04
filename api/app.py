@@ -1,6 +1,6 @@
 import ast
 import openai
-from flask import Flask, redirect, render_template, request, url_for, jsonify
+from flask import Flask, render_template, request, jsonify
 from supabase import Client, create_client
 import random
 import json
@@ -68,14 +68,14 @@ def generated_words():
 
 @app.route("/display_words")
 def display_words():
-    words_list = (
-        supabase.table("Flashcards").select("*").execute().data
-    )
+    words_list = supabase.table("Flashcards").select("*").execute().data
     if len(words_list) == 0:
         first_pair = None
     else:
         first_pair = words_list[0]
-    return render_template("display_words.html", words = json.dumps(words_list), first_pair = first_pair)  # Start displaying the first element of the list
+    return render_template(
+        "display_words.html", words=json.dumps(words_list), first_pair=first_pair
+    )  # Start displaying the first element of the list
 
 
 def query(topic, current_vocab):
@@ -113,6 +113,7 @@ def query(topic, current_vocab):
         print(f"Error in parsing response: {e}")
 
     return response_data
+
 
 @app.route("/study_session/<int:word_id>")
 def study_session(word_id):
@@ -154,9 +155,15 @@ def study_session(word_id):
     random.shuffle(options)
 
     # Pass data to the template, including word_id
-    return render_template("study_session.html", word=record["word1"], options=options, word_id=record["id"])
+    return render_template(
+        "study_session.html",
+        word=record["word1"],
+        options=options,
+        word_id=record["id"],
+    )
 
-@app.route('/get_correct_option/<int:word_id>', methods=['GET'])
+
+@app.route("/get_correct_option/<int:word_id>", methods=["GET"])
 def get_correct_option(word_id):
     # Fetch the correct option (word2) for the given word_id
     correct_option = (
@@ -169,14 +176,17 @@ def get_correct_option(word_id):
     )
 
     if not correct_option:
-        return jsonify({'error': 'Word not found'}), 404
+        return jsonify({"error": "Word not found"}), 404
 
-    return jsonify({'correct_option': correct_option[0]["word2"]})
+    return jsonify({"correct_option": correct_option[0]["word2"]})
 
-@app.route('/get_next_word/<int:current_id>', methods=['GET'])
+
+@app.route("/get_next_word/<int:current_id>", methods=["GET"])
 def get_next_word(current_id):
     # Mark the current word as learned
-    supabase.table("Flashcards").update({"learned": True}).eq("id", current_id).execute()
+    supabase.table("Flashcards").update({"learned": True}).eq(
+        "id", current_id
+    ).execute()
 
     # Fetch a random word that the user has not learned yet
     record = (
@@ -191,6 +201,6 @@ def get_next_word(current_id):
 
     if not record:
         # Handle the case when there are no more words
-        return jsonify({'message': 'No more words'}), 404
+        return jsonify({"message": "No more words"}), 404
 
-    return jsonify({'id': record[0]["id"]})
+    return jsonify({"id": record[0]["id"]})
