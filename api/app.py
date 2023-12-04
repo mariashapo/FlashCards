@@ -1,7 +1,6 @@
 import ast
-
 import openai
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, redirect, render_template, request, url_for, jsonify
 from supabase import Client, create_client
 
 # Supabase credentials
@@ -17,10 +16,47 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 app = Flask(__name__)
 
-
 @app.route("/")
 def index():
-    return render_template("index.html")
+    # Fetch all topics from the Topics table
+    topics_data = supabase.table("Topics").select("id, name").execute()
+
+    # If the response contains data, convert it to a list of dictionaries
+    if topics_data.data:
+        topics_list = [{"id": topic["id"], "name": topic["name"]} for topic in topics_data.data]
+    else:
+        topics_list = []
+
+    # Render the index template and pass the topics list
+    return render_template("index.html", topics_list=topics_list)
+
+
+@app.route('/add_new_topic', methods=['POST'])
+def add_new_topic():
+    # Get the new topic name from the request form data
+    new_topic_name = request.form.get('newTopicName')
+
+    # Check if the 'newTopicName' field is missing in the request data
+    if new_topic_name is None:
+        return jsonify({"error": "'newTopicName' field is missing in the request"}), 400
+
+    # Validate that the new topic name is not empty or null
+    if not new_topic_name.strip():
+        return jsonify({"error": "Topic name cannot be empty"}), 400
+    
+    max_id_result = supabase.rpc('max_id', params={}).execute()
+    max_id=max_id_result.data
+
+    # Insert the new topic into the database
+    # This is an example; adjust according to your database schema
+    print(new_topic_name)
+    insert_result = supabase.table("Topics").insert({"id":max_id+1,"name": new_topic_name}).execute()
+
+    # Retrieve the ID of the new topic (adjust based on how your DB returns this information)
+    new_topic_id = insert_result.data[0]['id'] if insert_result.data else None
+
+    # Return the new topic's ID and name in a JSON response
+    return jsonify({'id': new_topic_id, 'name': new_topic_name})
 
 @app.route('/add_word')
 def add_word():
@@ -50,14 +86,17 @@ def generate_words():
 def added_word():
     word = request.form.get("word")
     translation = request.form.get("translation")
+    topic_id = request.form.get("topic")
+    topic_data = supabase.table("Topics").select("name").eq("id", topic_id).execute()
+    topic_name=topic_data.data[0]['name']
     # Insert data into Supabase
-    data = {"word1": word, "word2": translation}
+    data = {"word1": word, "word2": translation, "topic_id": topic_id}
     response = supabase.table("Flashcards").insert(data).execute()
     try:
         response.data[0]["word1"]
     except (TypeError, AttributeError):
         print("Error adding flash cards to database.")
-    return render_template("added_word.html", word=word, translation=translation)
+    return render_template("added_word.html", word=word, translation=translation, topic_name=topic_name)
 
 
 @app.route("/generated_words", methods=["POST"])

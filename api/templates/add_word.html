@@ -44,12 +44,12 @@
 
                         <!-- Topic Selection Dropdown -->
                         <div class="form-group">
-                            <label for="topic" class="form-label mt-4">Select Topic</label>
-                            <select class="form-select" id="topic" name="topic">
-                                {% for topic in topics_list %}
-                                <option value="{{ topic.id }}">{{ topic.name }}</option>
-                                {% endfor %}
-                            </select>
+                                <label for="topic" class="form-label mt-4">Select Topic</label>
+                                <select class="form-select" id="topic" name="topic">
+                                    {% for topic in topics_list %}
+                                    <option value="{{ topic.id }}">{{ topic.name }}</option>
+                                    {% endfor %}
+                                </select>
                         </div>
 
                         <button type="submit" class="btn btn-primary btn-block">Submit</button>
