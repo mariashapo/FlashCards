@@ -32,6 +32,19 @@
                             Study Session
 						</a>
 					</li>
+					{% if not current_user.is_anonymous %}
+						<li class="nav-item">
+							<a class="nav-link {{'active' if location=='logout'}}" href="{{ url_for('logout')}}">
+								Logout
+							</a>
+						</li>
+					{% else %}
+						<li class="nav-item">
+							<a class="nav-link {{'active' if location=='login'}}" href="{{ url_for('login')}}">
+								Login
+							</a>
+						</li>
+					{% endif %}
 				</ul>
 		</div>
 	</nav>

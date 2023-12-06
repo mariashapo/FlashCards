@@ -14,6 +14,9 @@
 	</head>
 <body class="page-background">
     {{create_navbar("index", "form-background")}}
+    {% if username %}
+        <h3>Welcome to Flashcards {{username}}</h3>
+    {% endif %}
     <h1>Index page</h1>
 </body>
 </html>

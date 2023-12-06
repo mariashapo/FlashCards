@@ -1,9 +1,10 @@
 import ast
 import openai
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, redirect, render_template, request, url_for, jsonify, flash 
 from supabase import Client, create_client
 import random
 import json
+from flask_login import LoginManager, login_required, UserMixin, login_user, logout_user
 
 # Supabase credentials
 SUPABASE_URL = "https://qfgwfjebnbvfijeaejza.supabase.co"
@@ -16,12 +17,81 @@ SUPABASE_ANON_KEY = (
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+login_manager = LoginManager()
 app = Flask(__name__)
+app.secret_key = 'dev'
+login_manager.login_view = 'login'
+login_manager.init_app(app)
 
 
-@app.route("/")
+class SimpleUser(UserMixin):
+    def __init__(self, user_id):
+        self.id = user_id
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    """ Takes a user ID and returns a user object or None if the user does not exist."""
+    if user_id is not None:
+        return SimpleUser(user_id)
+    return None
+
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    """Redirect unauthorized users to Login page."""
+    flash('You must be logged in to view that page.')
+    return redirect(url_for('login'))
+
+
+@app.route("/", methods=["GET", "POST"])
 def index():
-    return render_template("index.html")
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        response = supabase.table("Users").select("*").eq("username", username).execute()
+        try:
+            print("Hey")
+            if response.data[0]["password"] == password:
+                login_user(SimpleUser(str(response.data[0]["id"])))
+                return render_template("index.html", username = username)
+            else:
+                flash("Incorrect password")
+                return redirect("login")
+        except (TypeError, AttributeError, IndexError):
+            flash("The user was not found")
+            return redirect("login")
+    return render_template("index.html", username = None)
+
+
+@app.route("/signup", methods=['GET', 'POST'])
+def signup():
+    return render_template("signup.html")
+
+
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        data = {"username": username, "password": password}
+        response = supabase.table("Users").insert(data).execute()
+        try:
+            response.data[0]["username"]
+            flash(f'User: {username} was properly registered')
+        except (TypeError, AttributeError):
+            print("Error adding flash cards to database.")
+
+    return render_template("login.html")
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    """Route used to allow users to logout."""
+    logout_user()
+    flash("You successfully logged out")
+    return redirect(url_for('login'))
 
 
 @app.route("/topics")
@@ -74,6 +144,7 @@ def add_new_topic():
 
 
 @app.route("/add_word")
+@login_required
 def add_word():
     # Fetch corresponding topic names from Topics table
     topics_data = supabase.table("Topics").select("id, name").execute()
@@ -87,6 +158,7 @@ def add_word():
 
 
 @app.route("/generate_words")
+@login_required
 def generate_words():
     # Fetch corresponding topic names from Topics table
     topics_data = supabase.table("Topics").select("id, name").execute()
@@ -98,6 +170,7 @@ def generate_words():
 
 
 @app.route("/added_word", methods=["POST"])
+@login_required
 def added_word():
     word = request.form.get("word")
     translation = request.form.get("translation")
@@ -117,6 +190,7 @@ def added_word():
 
 
 @app.route("/generated_words", methods=["POST"])
+@login_required
 def generated_words():
     # Get the selected topic/set to add the words to
     topic_id = request.form.get("topic")
@@ -154,6 +228,7 @@ def generated_words():
 
 
 @app.route("/display_words")
+@login_required
 def display_words():
     words_list = supabase.table("Flashcards").select("*").execute().data
     if len(words_list) == 0:
