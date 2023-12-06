@@ -218,11 +218,15 @@ def added_word():
 def generated_words():
     topic_id = request.form.get("topic")
     prompt = request.form.get("prompt")
+    topic_data = supabase.table("Topics").select("name").eq("id", topic_id).execute()
+    topic_name = topic_data.data[0]["name"]
 
-    async_query(topic_id, prompt)
+    output_list = query(topic_id, prompt)
 
     # Render an intermediate page with a loading message
-    return render_template("loading.html")
+    # return render_template("loading.html")
+    return render_template(
+        "generated_words.html", output_list=output_list, topic_name=topic_name)
 
 
 @app.route("/display_words")
@@ -241,7 +245,7 @@ def display_words():
 background_tasks_results = {}
 
 
-def async_query(topic_id, topic_name):
+def query(topic_id, topic_name):
     current_vocab_pairs = (
         supabase.table("Flashcards")
         .select("word1")
@@ -258,7 +262,7 @@ def async_query(topic_id, topic_name):
     print("The topic ID is: ", topic_id)
 
     prompt = (
-        f"Create 10 unique entries of English-Spanish word pairs related "
+        f"Create 5 unique entries of English-Spanish word pairs related "
         f"to the topic '{topic_name}', tailored for a beginner level. Each entry "
         f"should include an English word and its Spanish translation. "
         f"Do not duplicate these existing vocabulary entries: "
@@ -289,6 +293,7 @@ def async_query(topic_id, topic_name):
 
     except Exception as e:
         print("Error in async_query:", str(e))
+    return output_list
 
 
 @app.route("/study_session/<int:word_id>")
