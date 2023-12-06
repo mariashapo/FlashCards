@@ -1,42 +1,24 @@
 {% from "navbar.html" import create_navbar with context %}
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
-        <style>
-            .form-box {
-                max-width: 25vw; /* Adjust this value to your desired width */
-                margin: auto;
-                padding: 20px;
-                border: 1px solid #ddd;
-                border-radius: 10px;
-                margin-top: 20vh;
-            }
-            .form-background {
-                background-color: #3498db;
-            }
-            .page-background {
-                background-color: #dadbdc;
-            }
-            .center-message {
-                text-align: center;
-                font-size: 24px;
-                margin-top: 50px; /* Adjust for desired spacing */
-            }
-        </style>
-    </head>
-    <body class="page-background">
-        {{ create_navbar("generate_word", "form-background") }}
-        
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="center-message">
-                        <h3>Your flash cards were successfully added to your vocabulary list</h3>
-                        <p>Check them out in the "Display Words" section!</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </body>
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+    <style>
+        .form-background {
+            background-color: #3498db;
+        }
+        .page-background {
+            background-color: #dadbdc;
+        }
+    </style>
+</head>
+<body class="page-background">
+    {{ create_navbar("index", "form-background") }}
+    <div class="container mt-4">
+        <h1 class="bg-success">Success</h1>
+        <h3>The new words were successfully added to your flash cards</h3>
+        <p>Please check them out in the "Display Words" section!</p>
+    </div>
+</body>
 </html>
+
