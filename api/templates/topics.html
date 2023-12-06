@@ -13,19 +13,45 @@
         .topic-list {
             margin: 20px;
         }
+        /* Style for the dividers */
+        .topic-square {
+            width: 20vw;
+            height: 15vh; /* Adjust the height as needed */
+            background-color: #3498db; /* Set the background color */
+            border-radius: 10px; /* Adjust the border-radius for rounded edges */
+            margin-bottom: 10px; /* Adjust the spacing between dividers */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            text-decoration: none;
+        }
+
+        /* Style for the link (anchor) */
+        .a {
+            display: block;
+            height: 100%;
+            width: 100%;
+            text-decoration: none;
+            color: white; /* Set the text color */
+        }
     </style>
 </head>
 </head>
 <body class="page-background">
     {{ create_navbar("topics", "form-background") }}
+    <h2>Existing Flashcard Sets:</h2>
     <div class="container">
-        <div class="topic-list">
-            <h2>Existing Flashcard Sets:</h2>
-            <ul>
-                {% for topic in topics_list %}
-                <li>{{ topic.name }}</li>
-                {% endfor %}
-            </ul>
+        <div class="row">
+        {% for i in range(topics_list|length) %}
+            {% if i != 0 and i%3 == 0 %}
+                </div>
+                <div class="row">
+            {% endif %}
+                <div class="col-md-4">
+                    <a class="topic-square" href="{{url_for('display_words')}}">{{ topics_list[i].name }}</a>
+                </div>
+        {% endfor %}
         </div>
         <div>
             <!-- Button to trigger modal -->
