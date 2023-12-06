@@ -122,6 +122,7 @@ def test_generate_words_route(client):
     response = client.get("/generate_words")
     assert response.status_code == 200
 
+
 """
 def test_added_word_route(client, mock_supabase):
     response = client.post(
