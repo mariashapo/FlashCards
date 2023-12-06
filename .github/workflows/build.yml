@@ -64,8 +64,8 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Install pytest and pytest-mock
-      - name: Run pytest
         run: pip install pytest pytest-mock
+      - name: Run pytest
         run: pytest
 
   deploy-to-vercel:
