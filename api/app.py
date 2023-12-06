@@ -1,7 +1,6 @@
 import ast
 import json
 import random
-import threading
 
 import openai
 from flask import (Flask, flash, jsonify, redirect, render_template, request,
@@ -220,10 +219,7 @@ def generated_words():
     topic_id = request.form.get("topic")
     prompt = request.form.get("prompt")
 
-    # Start the OpenAI request in a separate thread
-    task_id = 1  # Generate a unique task identifier
-    thread = threading.Thread(target=async_query, args=(topic_id, prompt, task_id))
-    thread.start()
+    async_query(topic_id, prompt)
 
     # Render an intermediate page with a loading message
     return render_template("loading.html")
@@ -245,7 +241,7 @@ def display_words():
 background_tasks_results = {}
 
 
-def async_query(topic_id, topic_name, task_id):
+def async_query(topic_id, topic_name):
     current_vocab_pairs = (
         supabase.table("Flashcards")
         .select("word1")
@@ -269,7 +265,7 @@ def async_query(topic_id, topic_name, task_id):
         f"{', '.join(existing_vocab)}. "
         f"Format each entry as a dictionary within a list, like this: "
         f"[{{'English': 'EnglishWord', 'Spanish': 'SpanishWord'}}, ...]."
-        f"Provide exactly 10 entries."
+        f"Provide exactly 5 entries."
     )
 
     try:
@@ -291,10 +287,8 @@ def async_query(topic_id, topic_name, task_id):
             response = supabase.table("Flashcards").insert(data).execute()
             print("Inserted data into database:", response.data)
 
-        background_tasks_results[task_id] = "completed"
     except Exception as e:
         print("Error in async_query:", str(e))
-        background_tasks_results[task_id] = {"error": str(e)}
 
 
 @app.route("/study_session/<int:word_id>")
