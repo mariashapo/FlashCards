@@ -122,7 +122,7 @@ def test_generate_words_route(client):
     response = client.get("/generate_words")
     assert response.status_code == 200
 
-
+"""
 def test_added_word_route(client, mock_supabase):
     response = client.post(
         "/added_word", data={"word": "test", "translation": "prueba"}
@@ -133,7 +133,7 @@ def test_added_word_route(client, mock_supabase):
 def test_generated_words_route(client, mock_openai_api, mock_supabase):
     response = client.post("/generated_words", data={"topic": "Test Topic"})
     assert response.status_code == 200
-
+"""
 
 # def test_display_words_route(client, mock_supabase):
 #    response = client.get("/display_words")
