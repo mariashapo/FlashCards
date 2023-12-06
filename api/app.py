@@ -1,10 +1,10 @@
 import ast
 import openai
-from flask import Flask, redirect, render_template, request, url_for, jsonify, flash 
+from flask import Flask, redirect, render_template, request, url_for, jsonify, flash
 from supabase import Client, create_client
 import random
 import json
-from flask_login import LoginManager, login_required, UserMixin, login_user, logout_user
+from flask_login import LoginManager, login_required, UserMixin, login_user, logout_user, current_user
 
 # Supabase credentials
 SUPABASE_URL = "https://qfgwfjebnbvfijeaejza.supabase.co"
@@ -19,8 +19,8 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 login_manager = LoginManager()
 app = Flask(__name__)
-app.secret_key = 'dev'
-login_manager.login_view = 'login'
+app.secret_key = "dev"
+login_manager.login_view = "login"
 login_manager.init_app(app)
 
 
@@ -31,7 +31,7 @@ class SimpleUser(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_id):
-    """ Takes a user ID and returns a user object or None if the user does not exist."""
+    """Takes a user ID and returns a user object or None if the user does not exist."""
     if user_id is not None:
         return SimpleUser(user_id)
     return None
@@ -40,8 +40,8 @@ def load_user(user_id):
 @login_manager.unauthorized_handler
 def unauthorized():
     """Redirect unauthorized users to Login page."""
-    flash('You must be logged in to view that page.')
-    return redirect(url_for('login'))
+    flash("You must be logged in to view that page.")
+    return redirect(url_for("login"))
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -49,27 +49,29 @@ def index():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        response = supabase.table("Users").select("*").eq("username", username).execute()
+        response = (
+            supabase.table("Users").select("*").eq("username", username).execute()
+        )
         try:
             print("Hey")
             if response.data[0]["password"] == password:
                 login_user(SimpleUser(str(response.data[0]["id"])))
-                return render_template("index.html", username = username)
+                return render_template("index.html", username=username)
             else:
                 flash("Incorrect password")
                 return redirect("login")
         except (TypeError, AttributeError, IndexError):
             flash("The user was not found")
             return redirect("login")
-    return render_template("index.html", username = None)
+    return render_template("index.html", username=None)
 
 
-@app.route("/signup", methods=['GET', 'POST'])
+@app.route("/signup", methods=["GET", "POST"])
 def signup():
     return render_template("signup.html")
 
 
-@app.route("/login", methods=['GET', 'POST'])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form.get("username")
@@ -78,26 +80,27 @@ def login():
         response = supabase.table("Users").insert(data).execute()
         try:
             response.data[0]["username"]
-            flash(f'User: {username} was properly registered')
+            flash(f"User: {username} was properly registered")
         except (TypeError, AttributeError):
             print("Error adding flash cards to database.")
 
     return render_template("login.html")
 
 
-@app.route('/logout')
+@app.route("/logout")
 @login_required
 def logout():
     """Route used to allow users to logout."""
     logout_user()
     flash("You successfully logged out")
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
 
 
 @app.route("/topics")
 def topics():
+    print(current_user.id)
     # Fetch all topics from the Topics table
-    topics_data = supabase.table("Topics").select("id, name").execute()
+    topics_data = supabase.table("Topics").select("id, name").eq("owner_id", current_user.id).execute()
 
     # If the response contains data, convert it to a list of dictionaries
     if topics_data.data:
@@ -124,15 +127,18 @@ def add_new_topic():
     if not new_topic_name.strip():
         return jsonify({"error": "Topic name cannot be empty"}), 400
 
+    # Fetch the maximum ID from the Topics table
+    # max_id is a custom SQL query defined in Supabase, which does the following:
+    #   SELECT MAX(id) INTO max_id_value FROM "Topics";
+    #   RETURN COALESCE(max_id_value, 0);
     max_id_result = supabase.rpc("max_id", params={}).execute()
     max_id = max_id_result.data
 
     # Insert the new topic into the database
-    # This is an example; adjust according to your database schema
     print(new_topic_name)
     insert_result = (
         supabase.table("Topics")
-        .insert({"id": max_id + 1, "name": new_topic_name})
+        .insert({"id": max_id + 1, "name": new_topic_name, "owner_id": current_user.id})
         .execute()
     )
 
@@ -146,9 +152,10 @@ def add_new_topic():
 @app.route("/add_word")
 @login_required
 def add_word():
+
     # Fetch corresponding topic names from Topics table
-    topics_data = supabase.table("Topics").select("id, name").execute()
-    topics = {topic["id"]: topic["name"] for topic in topics_data.data}
+    response = supabase.table("Topics").select("id, name").eq("owner_id", current_user.id).execute()
+    topics = {topic["id"]: topic["name"] for topic in response.data}
 
     # Filter only the names of the topics that are used in Flashcards
     topics_list = [{"id": topic_id, "name": topics[topic_id]} for topic_id in topics]
@@ -161,7 +168,7 @@ def add_word():
 @login_required
 def generate_words():
     # Fetch corresponding topic names from Topics table
-    topics_data = supabase.table("Topics").select("id, name").execute()
+    topics_data = supabase.table("Topics").select("id, name").eq("owner_id", current_user.id).execute()
     topics = {topic["id"]: topic["name"] for topic in topics_data.data}
 
     # Filter only the names of the topics that are used in Flashcards
@@ -226,6 +233,13 @@ def generated_words():
         "generated_words.html", output_list=output_list, topic_name=topic_name
     )
 
+"""
+@app.route("/select_flashcard_topic")
+@login_required
+def select_flashcard_set():
+    topic_list = supabase.table("Topics").select("*").eq("owner_id", current_user.id).execute().data  # Assuming you have a 'Sets' table
+    return render_template("select_flashcard_set.html", topic_list=topic_list)
+"""
 
 @app.route("/display_words")
 @login_required

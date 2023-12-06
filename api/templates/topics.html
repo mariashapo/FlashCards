@@ -17,10 +17,10 @@
 </head>
 </head>
 <body class="page-background">
-    {{ create_navbar("add_word", "form-background") }}
+    {{ create_navbar("topics", "form-background") }}
     <div class="container">
         <div class="topic-list">
-            <h2>Current Topics</h2>
+            <h2>Existing Flashcard Sets:</h2>
             <ul>
                 {% for topic in topics_list %}
                 <li>{{ topic.name }}</li>
@@ -28,10 +28,9 @@
             </ul>
         </div>
         <div>
-            <h2>Add New Topic</h2>
             <!-- Button to trigger modal -->
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTopicModal">
-                Add New Topic
+                Add New Set
             </button>
             
             <!-- Modal -->
