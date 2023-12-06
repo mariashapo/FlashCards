@@ -125,7 +125,7 @@ def topics():
 
 @app.route("/add_new_topic", methods=["POST"])
 def add_new_topic():
-    # Get the new topic name from the request form data
+    # Get a new topic name from the request form data
     new_topic_name = request.form.get("newTopicName")
 
     # Check if the 'newTopicName' field is missing in the request data
