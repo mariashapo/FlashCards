@@ -28,19 +28,23 @@
                 <div class="form-box form-background">
                     <h2 class="text-center">Add Word and Translation</h2>
                     <form action="{{ url_for('added_word') }}" method="post">
+
                         <div class="form-group">
-                            <label for="word" class="form-label">Word</label>
-                            <input type="text" id="word" class="form-control" name="word" required>
+                            <div style="text-align: center;">
+                           <label for="topic" class="text-center" style="font-size: 30px;">Word</label>
+                           <input type="text" id="word" class="form-control" name="word" required>
                         </div>
 
                         <div class="form-group">
-                            <label for="translation" class="form-label">Translation</label>
+                            <div style="text-align: center;">
+                            <label for="topic" class="text-center" style="font-size: 30px;">Translation</label>
                             <input type="text" id="translation" class="form-control" name="translation" required>
                         </div>
 
                         <!-- Topic Selection Dropdown -->
                         <div class="form-group">
-                            <label for="topic" class="form-label mt-4">Select Flashcard Set</label>
+                            <div style="text-align: center;">
+                            <label for="topic" class="text-center" style="font-size: 20px;">Select a Set to Add Words</label>
                             <select class="form-select" id="topic" name="topic">
                                 {% for topic in topics_list %}
                                 <option value="{{ topic.id }}">{{ topic.name }}</option>

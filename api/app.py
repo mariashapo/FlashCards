@@ -23,6 +23,7 @@ app = Flask(__name__)
 def index():
     return render_template("index.html")
 
+
 @app.route("/topics")
 def topics():
     # Fetch all topics from the Topics table
@@ -74,9 +75,6 @@ def add_new_topic():
 
 @app.route("/add_word")
 def add_word():
-    # Call the custom SQL function using rpc with an empty params argument
-    # response = supabase.rpc('get_distinct_topic_ids', params={}).execute()
-
     # Fetch corresponding topic names from Topics table
     topics_data = supabase.table("Topics").select("id, name").execute()
     topics = {topic["id"]: topic["name"] for topic in topics_data.data}
@@ -90,7 +88,13 @@ def add_word():
 
 @app.route("/generate_words")
 def generate_words():
-    return render_template("generate_words.html")
+    # Fetch corresponding topic names from Topics table
+    topics_data = supabase.table("Topics").select("id, name").execute()
+    topics = {topic["id"]: topic["name"] for topic in topics_data.data}
+
+    # Filter only the names of the topics that are used in Flashcards
+    topics_list = [{"id": topic_id, "name": topics[topic_id]} for topic_id in topics]
+    return render_template("generate_words.html", topics_list=topics_list)
 
 
 @app.route("/added_word", methods=["POST"])
@@ -114,20 +118,39 @@ def added_word():
 
 @app.route("/generated_words", methods=["POST"])
 def generated_words():
-    topic = request.form.get("topic")
-    current_vocab_pairs = supabase.table("Flashcards").select("word1").execute().data
+    # Get the selected topic/set to add the words to
+    topic_id = request.form.get("topic")
+    topic_data = supabase.table("Topics").select("name").eq("id", topic_id).execute()
+    topic_name = topic_data.data[0]["name"]
+
+    # Get the user prompt
+    prompt = request.form.get("prompt")
+    current_vocab_pairs = (
+        supabase.table("Flashcards")
+        .select("word1")
+        .eq("topic_id", topic_id)
+        .execute()
+        .data
+    )
     existing_vocab = [pair["word1"] for pair in current_vocab_pairs]
+
     # Open AI Request
-    output_list = query(topic, existing_vocab)
+    output_list = query(prompt, existing_vocab)
     # Insert data into Supabase
     for item in output_list:
-        data = {"word1": item["English"], "word2": item["Spanish"]}
+        data = {
+            "word1": item["English"],
+            "word2": item["Spanish"],
+            "topic_id": topic_id,
+        }
         response = supabase.table("Flashcards").insert(data).execute()
         try:
             response.data[0]["word1"]
         except (TypeError, AttributeError):
             print("Error adding flash cards to database.")
-    return render_template("generated_words.html", output_list=output_list)
+    return render_template(
+        "generated_words.html", output_list=output_list, topic_name=topic_name
+    )
 
 
 @app.route("/display_words")
@@ -150,6 +173,7 @@ def query(topic, current_vocab):
     # Constructing the prompt
     max_length = 50
     level = "beginner"
+
     prompt = (
         f"Create 10 unique entries of English-Spanish word pairs related "
         f"to the topic '{topic}', tailored for a {level} level. Each entry "
