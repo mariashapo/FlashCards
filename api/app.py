@@ -274,7 +274,7 @@ def query(topic_id, topic_name):
 
     try:
         response = openai.Completion.create(
-            engine="text-davinci-003", prompt=prompt, max_tokens=600
+            engine="text-davinci-003", prompt=prompt, max_tokens=500
         )
         response_text = response.choices[0].text.strip()
         output_list = ast.literal_eval(response_text)
