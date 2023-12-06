@@ -1,18 +1,14 @@
-import threading
 import ast
-import openai
-from flask import Flask, redirect, render_template, request, url_for, jsonify, flash
-from supabase import Client, create_client
-import random
 import json
-from flask_login import (
-    LoginManager,
-    login_required,
-    UserMixin,
-    login_user,
-    logout_user,
-    current_user,
-)
+import random
+import threading
+
+import openai
+from flask import (Flask, flash, jsonify, redirect, render_template, request,
+                   url_for)
+from flask_login import (LoginManager, UserMixin, current_user, login_required,
+                         login_user, logout_user)
+from supabase import Client, create_client
 
 # Supabase credentials
 SUPABASE_URL = "https://qfgwfjebnbvfijeaejza.supabase.co"
