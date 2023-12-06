@@ -1,3 +1,4 @@
+import threading
 import ast
 import openai
 from flask import Flask, render_template, request, jsonify
@@ -118,39 +119,17 @@ def added_word():
 
 @app.route("/generated_words", methods=["POST"])
 def generated_words():
-    # Get the selected topic/set to add the words to
+
     topic_id = request.form.get("topic")
-    topic_data = supabase.table("Topics").select("name").eq("id", topic_id).execute()
-    topic_name = topic_data.data[0]["name"]
-
-    # Get the user prompt
     prompt = request.form.get("prompt")
-    current_vocab_pairs = (
-        supabase.table("Flashcards")
-        .select("word1")
-        .eq("topic_id", topic_id)
-        .execute()
-        .data
-    )
-    existing_vocab = [pair["word1"] for pair in current_vocab_pairs]
 
-    # Open AI Request
-    output_list = query(prompt, existing_vocab)
-    # Insert data into Supabase
-    for item in output_list:
-        data = {
-            "word1": item["English"],
-            "word2": item["Spanish"],
-            "topic_id": topic_id,
-        }
-        response = supabase.table("Flashcards").insert(data).execute()
-        try:
-            response.data[0]["word1"]
-        except (TypeError, AttributeError):
-            print("Error adding flash cards to database.")
-    return render_template(
-        "generated_words.html", output_list=output_list, topic_name=topic_name
-    )
+    # Start the OpenAI request in a separate thread
+    task_id = 1  # Generate a unique task identifier
+    thread = threading.Thread(target=async_query, args=(topic_id, prompt, task_id))
+    thread.start()
+
+    # Render an intermediate page with a loading message
+    return render_template("loading.html")
 
 
 @app.route("/display_words")
@@ -165,42 +144,60 @@ def display_words():
     )  # Start displaying the first element of the list
 
 
-def query(topic, current_vocab):
-    # Later I will make the api key an environment variable
+background_tasks_results = {}
+
+
+def async_query(topic_id, topic_name, task_id):
+
+    current_vocab_pairs = (
+        supabase.table("Flashcards")
+        .select("word1")
+        .eq("topic_id", topic_id)
+        .execute()
+        .data
+    )
+    existing_vocab = [pair["word1"] for pair in current_vocab_pairs]
+
     api_key = "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"
     openai.api_key = api_key
 
-    # Constructing the prompt
-    max_length = 50
-    level = "beginner"
+    print("The topic is: ", topic_name)
+    print("The topic ID is: ", topic_id)
 
     prompt = (
         f"Create 10 unique entries of English-Spanish word pairs related "
-        f"to the topic '{topic}', tailored for a {level} level. Each entry "
-        f"should include an English word, its Spanish translation, and a "
-        f"common Spanish sentence using that word. The sentence should be "
-        f"no longer than {max_length} characters. Do not duplicate these "
-        f"existing vocabulary entries: {', '.join(current_vocab)}. Format "
-        f"each entry as a dictionary within a list, like this: "
-        f"[{{'English': 'EnglishWord', 'Spanish': 'SpanishWord', "
-        f"'Sentence': 'SpanishSentence'}}, ...]. Provide exactly 10 entries."
+        f"to the topic '{topic_name}', tailored for a beginner level. Each entry "
+        f"should include an English word and its Spanish translation. "
+        f"Do not duplicate these existing vocabulary entries: "
+        f"{', '.join(existing_vocab)}. "
+        f"Format each entry as a dictionary within a list, like this: "
+        f"[{{'English': 'EnglishWord', 'Spanish': 'SpanishWord'}}, ...]."
+        f"Provide exactly 10 entries."
     )
 
     try:
         response = openai.Completion.create(
-            engine="text-davinci-003", prompt=prompt, max_tokens=2500
+            engine="text-davinci-003", prompt=prompt, max_tokens=1500
         )
         response_text = response.choices[0].text.strip()
-    except Exception as e:
-        return f"Error: {e}"
+        output_list = ast.literal_eval(response_text)
 
-    # Convert response to list of dictionaries
-    try:
-        response_data = ast.literal_eval(response_text)
-    except Exception as e:
-        print(f"Error in parsing response: {e}")
+        print("Received response from OpenAI:", output_list)
 
-    return response_data
+        for item in output_list:
+            data = {
+                "word1": item["English"],
+                "word2": item["Spanish"],
+                "topic_id": int(topic_id),
+                }
+            print(data)
+            response = supabase.table("Flashcards").insert(data).execute()
+            print("Inserted data into database:", response.data)
+
+        background_tasks_results[task_id] = 'completed'
+    except Exception as e:
+        print("Error in async_query:", str(e))
+        background_tasks_results[task_id] = {"error": str(e)}
 
 
 @app.route("/study_session/<int:word_id>")

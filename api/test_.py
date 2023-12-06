@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import openai
 import pytest
+# Assuming your Flask app is named 'flask_app'
 from app import app as flask_app
 
 
@@ -14,7 +15,7 @@ def client():
         yield client
 
 
-# Mock API, such that we do not interact with real API
+# Mock API to not interact with real OpenAI API
 @pytest.fixture
 def mock_openai_api():
     with patch("openai.Completion.create") as mock:
@@ -23,11 +24,8 @@ def mock_openai_api():
                 MagicMock(
                     text=str(
                         [
-                            {
-                                "English": "Hello",
-                                "Spanish": "Hola",
-                                "Sentence": "Hola, ¿cómo estás?",
-                            }
+                            {"English": "Hello", "Spanish": "Hola"},
+                            {"English": "Hell", "Spanish": "Hol"},
                         ]
                     )
                 )
@@ -36,67 +34,45 @@ def mock_openai_api():
         yield mock
 
 
-# Mock database, such that we do not interact with real database
+# Mock database to not interact with real Supabase
 @pytest.fixture
 def mock_supabase(mocker):
-    mocker.patch(
-        "app.supabase.table",
+    # Mock the 'insert' method to simulate a successful database operation
+    mocked_insert = MagicMock(
         return_value=MagicMock(
-            select=MagicMock(
+            execute=MagicMock(
                 return_value=MagicMock(
-                    execute=MagicMock(
-                        return_value=MagicMock(
-                            data=[{"word1": "Hello", "word2": "Hola"}]
-                        )
-                    ),
-                    order=MagicMock(
-                        return_value=MagicMock(
-                            limit=MagicMock(
-                                execute=MagicMock(
-                                    return_value=MagicMock(data=[{"id": 1}])
-                                )
-                            )
-                        )
-                    ),
-                    eq=MagicMock(
-                        return_value=MagicMock(
-                            execute=MagicMock(
-                                return_value=MagicMock(
-                                    data=[{"id": 1, "word1": "Hello", "word2": "Hola"}]
-                                )
-                            )
-                        )
-                    ),
-                    gt=MagicMock(
-                        return_value=MagicMock(
-                            order=MagicMock(
-                                return_value=MagicMock(
-                                    limit=MagicMock(
-                                        execute=MagicMock(
-                                            return_value=MagicMock(data=[{"id": 2}])
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    ),
+                    data=[{"word1": "test", "word2": "prueba", "topic_id": 1, "id": 1}]
                 )
-            ),
-            insert=MagicMock(
-                return_value=MagicMock(execute=MagicMock(return_value=MagicMock()))
-            ),
-        ),
+            )
+        )
     )
 
+    # Mock the 'select', 'eq', 'order', and 'limit' methods as before
+    mocked_table = MagicMock(
+        insert=mocked_insert,
+        select=MagicMock(
+            return_value=MagicMock(
+                execute=MagicMock(
+                    return_value=MagicMock(
+                        data=[{"word1": "Hello", "word2": "Hola"}]
+                    )
+                )
+            )
+        )
+    )
 
-# Tests for ChatGPT.py
+    mocker.patch("app.supabase.table", return_value=mocked_table)
+
+
+# Test cases
 def test_query_correct_output(mock_openai_api):
     topic = "Test Topic"
     vocab = ["Test", "Vocab"]
     result = query(topic, vocab)
     assert isinstance(result, list)
     assert all(isinstance(item, dict) for item in result)
-    assert "English" in result[0] and "Spanish" in result[0] and "Sentence" in result[0]
+    assert "English" in result[0] and "Spanish" in result[0]
 
 
 def test_query_handling_exceptions(mock_openai_api):
@@ -107,7 +83,6 @@ def test_query_handling_exceptions(mock_openai_api):
     assert "Error" in result
 
 
-# Tests for app.py
 def test_index_route(client):
     response = client.get("/")
     assert response.status_code == 200
@@ -123,27 +98,15 @@ def test_generate_words_route(client):
     assert response.status_code == 200
 
 
-"""
 def test_added_word_route(client, mock_supabase):
-    response = client.post(
-        "/added_word", data={"word": "test", "translation": "prueba"}
-    )
+    response = client.post("/added_word", data={"word": "test", "translation": "prueba"})
     assert response.status_code == 200
 
 
-def test_generated_words_route(client, mock_openai_api, mock_supabase):
-    response = client.post("/generated_words", data={"topic": "Test Topic"})
+def test_generated_words_route(client):
+    response = client.post("/generated_words", data={"topic": "Test Topic",
+                                                     "prompt": "Test Prompt"})
     assert response.status_code == 200
-"""
-
-# def test_display_words_route(client, mock_supabase):
-#    response = client.get("/display_words")
-#    assert response.status_code == 302  # Should redirect
-
-
-# def test_display_word_route(client, mock_supabase):
-#    response = client.get("/display_word/1")
-#    assert response.status_code == 200
 
 
 def query(topic, current_vocab):
@@ -152,18 +115,12 @@ def query(topic, current_vocab):
     openai.api_key = api_key
 
     # Constructing the prompt
-    max_length = 50
-    level = "beginner"
     prompt = (
         f"Create 10 unique entries of English-Spanish word pairs related "
-        f"to the topic '{topic}', tailored for a {level} level. Each entry "
-        f"should include an English word, its Spanish translation, and a "
-        f"common Spanish sentence using that word. The sentence should be "
-        f"no longer than {max_length} characters. Do not duplicate these "
-        f"existing vocabulary entries: {', '.join(current_vocab)}. Format "
-        f"each entry as a dictionary within a list, like this: "
-        f"[{{'English': 'EnglishWord', 'Spanish': 'SpanishWord', "
-        f"'Sentence': 'SpanishSentence'}}, ...]. Provide exactly 10 entries."
+        f"to the topic '{topic}', tailored for a beginner level. Each entry "
+        f"should include an English word and its Spanish translation. "
+        f"Do not duplicate these existing vocabulary entries: "
+        f"{', '.join(current_vocab)}. Provide exactly 10 entries."
     )
 
     try:
@@ -171,13 +128,7 @@ def query(topic, current_vocab):
             engine="text-davinci-003", prompt=prompt, max_tokens=2500
         )
         response_text = response.choices[0].text.strip()
+        response_data = ast.literal_eval(response_text)
+        return response_data
     except Exception as e:
         return f"Error: {e}"
-
-    # Convert response to list of dictionaries
-    try:
-        response_data = ast.literal_eval(response_text)
-    except Exception as e:
-        print(f"Error in parsing response: {e}")
-
-    return response_data
