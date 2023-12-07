@@ -100,6 +100,7 @@ def logout():
 
 
 @app.route("/topics")
+@login_required
 def topics():
     print(current_user.id)
     # Fetch all topics from the Topics table
@@ -119,7 +120,7 @@ def topics():
         topics_list = []
 
     # Render the index template and pass the topics list
-    return render_template("topics.html", topics_list=topics_list)
+    return render_template("topics.html", topics_list=topics_list, json_topics_list=json.dumps(topics_list))
 
 
 @app.route("/add_new_topic", methods=["POST"])
@@ -209,7 +210,7 @@ def added_word():
     except (TypeError, AttributeError):
         print("Error adding flash cards to database.")
     return render_template(
-        "added_word.html", word=word, translation=translation, topic_name=topic_name
+        "added_word.html", word=word, translation=translation, topic_name=topic_name, topic_id=topic_id
     )
 
 
@@ -229,10 +230,10 @@ def generated_words():
         "generated_words.html", output_list=output_list, topic_name=topic_name)
 
 
-@app.route("/display_words")
+@app.route("/display_words/<int:topic_id>")
 @login_required
-def display_words():
-    words_list = supabase.table("Flashcards").select("*").execute().data
+def display_words(topic_id):
+    words_list = supabase.table("Flashcards").select("*").eq("topic_id", topic_id).execute().data
     if len(words_list) == 0:
         first_pair = None
     else:
