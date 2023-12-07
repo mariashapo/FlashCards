@@ -264,8 +264,7 @@ def query(topic_id, topic_name):
         .data
     )
     existing_vocab = [pair["word1"] for pair in current_vocab_pairs]
-    # api_key ="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"
-    api_key = "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"
+    api_key = "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"
     openai.api_key = api_key
 
     print("The topic is: ", topic_name)
