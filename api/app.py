@@ -306,7 +306,7 @@ def study_session(word_id):
         .execute()
         .data
     )
-
+    print(word_details)
     if not word_details:
         # Handle the case when the word with the specified ID is not found
         return render_template("word_not_found.html")
