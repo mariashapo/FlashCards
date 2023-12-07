@@ -297,6 +297,7 @@ def query(topic_id, topic_name):
 
 
 @app.route("/study_session/<int:word_id>")
+@login_required
 def study_session(word_id):
     # Fetch the word details based on the provided word_id
     word_details = (
