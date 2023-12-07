@@ -97,12 +97,12 @@
 
     <script>
         function checkTranslation(selectedOption, wordId) {
-            // Fetch the correct option from the server (you need to implement this logic in your Flask route)
+            // Fetch the correct option from the server
             console.log('Fetching correct option for Word ID:', wordId);
             fetch(`/get_correct_option/${wordId}`)
                 .then(response => response.json())
                 .then(correctData => {
-                    // Your logic to check if the selected option is correct
+                    // Check if the selected option is correct
                     var isCorrect = selectedOption === correctData.correct_option;
                     console.log(selectedOption);
     
@@ -115,14 +115,19 @@
                                 if (nextData.id) {
                                     window.location.href = `/study_session/${nextData.id}`;
                                 } else {
-                                    window.location.href = "/no_more_words";
+                                    // Show an alert message instead of redirecting
+                                    alert("Well done! All words learned. Please add new words.");
                                 }
                             });
                     } else {
                         alert('Wrong! Try again.');
+                        // Redirect to the same word if the word is wrong
+                        window.location.href = `/study_session/${wordId}`;
                     }
                 });
         }
     </script>
+    
+    
 </body>
 </html>

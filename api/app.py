@@ -326,10 +326,9 @@ def start_study_session():
     # Assuming you're looking for the first word in the topic that hasn't been studied yet
     word_data = (
         supabase.table("Flashcards")
-        .select("id")  # Select only the id column if that's all you need
-        .eq("topic_id", topic_id)  # Make sure this is 'topic_id', not 'topic_is'
-        .eq("learned", False)  # Assuming there's a 'studied' column to filter by
-        #.order("id")  # Order by id ascending to get the first one
+        .select("id")  
+        .eq("topic_id", topic_id)  
+        .eq("learned", False)  
         .limit(1)  # Limit to 1 to get only the first result
         .execute()
     )
@@ -371,17 +370,22 @@ def start_study_session():
     )
 
 
-@app.route("/study_session/<int:word_id>", methods=["POST"])
+@app.route("/study_session/<int:word_id>", methods=["GET","POST"])
 @login_required
 def study_session(word_id):
-    # Fetch the word details based on the provided word_id
-    word_details = (
+    
+    topic_id = (
         supabase.table("Flashcards")
-        .select("id", "word1", "word2")
+        .select("topic_id")
         .eq("id", word_id)
         .execute()
         .data
-    )
+    )[0]['topic_id']
+    
+    # fetch a random word here
+    # write a query to fetch a random not learned word from the same topic set
+    word_details = supabase.rpc("get_random_word_for_topic", {'topic_id_': topic_id}).execute().data
+    
     print(word_details)
     if not word_details:
         # Handle the case when the word with the specified ID is not found
@@ -392,21 +396,12 @@ def study_session(word_id):
     correct_word = record["word2"]
 
     # Fetch three additional random word2 translations (excluding the correct word)
-    random_words_data = (
-        supabase.table("Flashcards")
-        .select("word2")
-        .neq("word2", correct_word)
-        .order("id")  # Use a unique field like 'id' for randomness
-        .limit(3)
-        .execute()
-        .data
-    )
-
-    # Extract the random words
-    random_words = [word_data["word2"] for word_data in random_words_data]
+    wrong_words_data = supabase.rpc("get_random_words_for_same_owner", {'exclude_word_id': word_id}).execute().data
+    
+    wrong_words_translations = [i['word2'] for i in wrong_words_data]
 
     # Include the correct word in the options
-    options = [correct_word] + random_words
+    options = [correct_word] + wrong_words_translations
 
     # Shuffle the options
     random.shuffle(options)
@@ -416,7 +411,7 @@ def study_session(word_id):
         "study_session.html",
         word=record["word1"],
         options=options,
-        word_id=record["id"],
+        word_id=record["word_id"],
     )
 
 
@@ -444,20 +439,20 @@ def get_next_word(current_id):
     supabase.table("Flashcards").update({"learned": True}).eq(
         "id", current_id
     ).execute()
-
-    # Fetch a random word that the user has not learned yet
-    record = (
+    
+    topic_id = (
         supabase.table("Flashcards")
-        .select("*")
-        .eq("learned", False)
-        .order("id")  # Use a unique field like 'id' for randomness
-        .limit(1)
+        .select("topic_id")
+        .eq("id", current_id)
         .execute()
         .data
-    )
+    )[0]['topic_id']
+
+    # Fetch a random word that the user has not learned yet
+    record = supabase.rpc("get_random_word_for_topic", {'topic_id_': topic_id}).execute().data
 
     if not record:
         # Handle the case when there are no more words
         return jsonify({"message": "No more words"}), 404
 
-    return jsonify({"id": record[0]["id"]})
+    return jsonify({"id": record[0]["word_id"]})
