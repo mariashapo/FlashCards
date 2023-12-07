@@ -56,7 +56,6 @@ def index():
             supabase.table("Users").select("*").eq("username", username).execute()
         )
         try:
-            print("Hey")
             if response.data[0]["password"] == password:
                 login_user(SimpleUser(str(response.data[0]["id"])))
                 return render_template("index.html", username=username)
@@ -80,12 +79,23 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
         data = {"username": username, "password": password}
-        response = supabase.table("Users").insert(data).execute()
+        
+        # Check if username already exists in the database
+        check = supabase.table("Users").select("*").eq("username", username).execute()
         try:
-            response.data[0]["username"]
-            flash(f"User: {username} was properly registered")
-        except (TypeError, AttributeError):
-            print("Error adding flash cards to database.")
+            check.data[0]
+        except IndexError:  # If user does not exist
+            response = supabase.table("Users").insert(data).execute()
+            try:
+                response.data[0]["username"]
+                flash(f"User: {username} was properly registered.")
+                return redirect("login")
+            except (TypeError, AttributeError):
+                print("Error adding flash cards to database.")
+            
+        # If user already exists in the database
+        flash(f'Username: {username} is already in use. Please, choose a different one.')
+        return redirect("signup")
 
     return render_template("login.html")
 
@@ -239,7 +249,7 @@ def display_words(topic_id):
     else:
         first_pair = words_list[0]
     return render_template(
-        "display_words.html", words=json.dumps(words_list), first_pair=first_pair
+        "display_words.html", words=json.dumps(words_list), first_pair=first_pair, list_length = len(words_list)
     )  # Start displaying the first element of the list
 
 
