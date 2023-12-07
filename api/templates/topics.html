@@ -40,6 +40,7 @@
 </head>
 <body class="page-background">
     {{ create_navbar("topics", "form-background") }}
+    <input type="hidden" id="topics_list" value="{{ json_topics_list }}">
     <h2>Existing Flashcard Sets:</h2>
     <div class="container">
         <div class="row">
@@ -89,7 +90,11 @@
     document.addEventListener('DOMContentLoaded', function() {
         var addTopicForm = document.getElementById('addTopicForm');
         var newTopicNameInput = document.getElementById('newTopicName');
-        var topicsList = document.querySelector('.topic-list ul');
+        var topics = JSON.parse(document.getElementById("topics_list").value);
+        console.log(topics);
+        console.log(topics.length);
+        var topicsRows = document.getElementsByClassName('row');
+        //var topicsList = document.querySelector('.topic-list ul');
         var addTopicModal = new bootstrap.Modal(document.getElementById('addTopicModal'));
 
         addTopicForm.addEventListener('submit', function(e) {
@@ -115,9 +120,14 @@
                     alert('Error: ' + data.error); // Display error to the user
                 } else {
                     // Add the new topic to the list on the page
-                    var newTopicItem = document.createElement('li');
-                    newTopicItem.textContent = data.name;
-                    topicsList.appendChild(newTopicItem);
+                    var newTopicDiv = document.createElement('div');
+                    newTopicDiv.classList.add("col-md-4");
+                    var newTopicAnchor = document.createElement('a');
+                    newTopicAnchor.classList.add("topic-square");
+                    newTopicAnchor.href = "{{ url_for('display_words') }}";
+                    newTopicAnchor.textContent = data.name;
+                    newTopicDiv.appendChild(newTopicAnchor);
+                    topicsRows[topicsRows.length - 1].appendChild(newTopicDiv);
 
                     // Clear the input field
                     newTopicNameInput.value = '';
