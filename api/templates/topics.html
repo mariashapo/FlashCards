@@ -25,6 +25,7 @@
             align-items: center;
             font-size: 24px;
             text-decoration: none;
+            color: white; /* Set the text color */
         }
 
         /* Style for the link (anchor) */
@@ -50,7 +51,7 @@
                 <div class="row">
             {% endif %}
                 <div class="col-md-4">
-                    <a class="topic-square" href="{{url_for('display_words')}}">{{ topics_list[i].name }}</a>
+                    <a class="topic-square" href="{{url_for('display_words', topic_id=topics_list[i].id)}}">{{ topics_list[i].name }}</a>
                 </div>
         {% endfor %}
         </div>
@@ -124,7 +125,7 @@
                     newTopicDiv.classList.add("col-md-4");
                     var newTopicAnchor = document.createElement('a');
                     newTopicAnchor.classList.add("topic-square");
-                    newTopicAnchor.href = "{{ url_for('display_words') }}";
+                    newTopicAnchor.href = "/display_words/" + data.id;
                     newTopicAnchor.textContent = data.name;
                     newTopicDiv.appendChild(newTopicAnchor);
                     topicsRows[topicsRows.length - 1].appendChild(newTopicDiv);

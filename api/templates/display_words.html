@@ -209,7 +209,7 @@
 <body class="page-background text-center">
     <input type="hidden" id="current_element_number" value=0>
     <input type="hidden" id="words_list" value="{{ words }}">
-    {{ create_navbar("display_words", "form-background") }}
+    {{ create_navbar("topics", "form-background") }}
 
     <div class="container centering">
         <div class="row">
@@ -238,9 +238,11 @@
                 {% endif %}
             </div>
             <div class="col" align="center">
+                {% if first_pair %}
                 <div id="goToNextCardButton" style="text-align: left;">
                     <p onclick="goToNextCard()"><span class="arrow right"></a></p>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
