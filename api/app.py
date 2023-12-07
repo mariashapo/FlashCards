@@ -265,7 +265,6 @@ def query(topic_id, topic_name):
         f"Create 5 unique entries of English-Spanish word pairs related "
         f"to the topic '{topic_name}', tailored for a beginner level. Each entry "
         f"should include an English word and its Spanish translation. "
-        f"Do not include '¿' and '¡'. "
         f"Do not duplicate these existing vocabulary entries: "
         f"{', '.join(existing_vocab)}. "
         f"Format each entry as a dictionary within a list, like this: "
