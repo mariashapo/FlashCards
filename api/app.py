@@ -120,7 +120,9 @@ def topics():
         topics_list = []
 
     # Render the index template and pass the topics list
-    return render_template("topics.html", topics_list=topics_list, json_topics_list=json.dumps(topics_list))
+    return render_template(
+        "topics.html", topics_list=topics_list, json_topics_list=json.dumps(topics_list)
+    )
 
 
 @app.route("/add_new_topic", methods=["POST"])
@@ -210,7 +212,11 @@ def added_word():
     except (TypeError, AttributeError):
         print("Error adding flash cards to database.")
     return render_template(
-        "added_word.html", word=word, translation=translation, topic_name=topic_name, topic_id=topic_id
+        "added_word.html",
+        word=word,
+        translation=translation,
+        topic_name=topic_name,
+        topic_id=topic_id,
     )
 
 
@@ -227,13 +233,16 @@ def generated_words():
     # Render an intermediate page with a loading message
     # return render_template("loading.html")
     return render_template(
-        "generated_words.html", output_list=output_list, topic_name=topic_name)
+        "generated_words.html", output_list=output_list, topic_name=topic_name
+    )
 
 
 @app.route("/display_words/<int:topic_id>")
 @login_required
 def display_words(topic_id):
-    words_list = supabase.table("Flashcards").select("*").eq("topic_id", topic_id).execute().data
+    words_list = (
+        supabase.table("Flashcards").select("*").eq("topic_id", topic_id).execute().data
+    )
     if len(words_list) == 0:
         first_pair = None
     else:
@@ -255,7 +264,7 @@ def query(topic_id, topic_name):
         .data
     )
     existing_vocab = [pair["word1"] for pair in current_vocab_pairs]
-
+    # api_key ="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"
     api_key = "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"
     openai.api_key = api_key
 
@@ -327,14 +336,14 @@ def start_study_session():
     # Assuming you're looking for the first word in the topic that hasn't been studied yet
     word_data = (
         supabase.table("Flashcards")
-        .select("id")  
-        .eq("topic_id", topic_id)  
-        .eq("learned", False)  
+        .select("id")
+        .eq("topic_id", topic_id)
+        .eq("learned", False)
         .limit(1)  # Limit to 1 to get only the first result
         .execute()
     )
 
-    first_word_id = word_data.data[0]['id'] if word_data.data else None
+    first_word_id = word_data.data[0]["id"] if word_data.data else None
 
     # Calculate the total number of words in the topic
     total_words_data = (
@@ -345,7 +354,6 @@ def start_study_session():
     )
 
     total_words = total_words_data.count if total_words_data.data else 0
-    
 
     # Calculate the number of learned words in the topic
     learned_words_data = (
@@ -367,26 +375,25 @@ def start_study_session():
         total_words=total_words,
         words_learned=words_learned,
         words_not_learned=words_not_learned,
-        topic_id=topic_id
+        topic_id=topic_id,
     )
 
 
-@app.route("/study_session/<int:word_id>", methods=["GET","POST"])
+@app.route("/study_session/<int:word_id>", methods=["GET", "POST"])
 @login_required
 def study_session(word_id):
-    
     topic_id = (
-        supabase.table("Flashcards")
-        .select("topic_id")
-        .eq("id", word_id)
-        .execute()
-        .data
-    )[0]['topic_id']
-    
+        supabase.table("Flashcards").select("topic_id").eq("id", word_id).execute().data
+    )[0]["topic_id"]
+
     # fetch a random word here
     # write a query to fetch a random not learned word from the same topic set
-    word_details = supabase.rpc("get_random_word_for_topic", {'topic_id_': topic_id}).execute().data
-    
+    word_details = (
+        supabase.rpc("get_random_word_for_topic", {"topic_id_": topic_id})
+        .execute()
+        .data
+    )
+
     print(word_details)
     if not word_details:
         # Handle the case when the word with the specified ID is not found
@@ -397,9 +404,13 @@ def study_session(word_id):
     correct_word = record["word2"]
 
     # Fetch three additional random word2 translations (excluding the correct word)
-    wrong_words_data = supabase.rpc("get_random_words_for_same_owner", {'exclude_word_id': word_id}).execute().data
-    
-    wrong_words_translations = [i['word2'] for i in wrong_words_data]
+    wrong_words_data = (
+        supabase.rpc("get_random_words_for_same_owner", {"exclude_word_id": word_id})
+        .execute()
+        .data
+    )
+
+    wrong_words_translations = [i["word2"] for i in wrong_words_data]
 
     # Include the correct word in the options
     options = [correct_word] + wrong_words_translations
@@ -440,17 +451,21 @@ def get_next_word(current_id):
     supabase.table("Flashcards").update({"learned": True}).eq(
         "id", current_id
     ).execute()
-    
+
     topic_id = (
         supabase.table("Flashcards")
         .select("topic_id")
         .eq("id", current_id)
         .execute()
         .data
-    )[0]['topic_id']
+    )[0]["topic_id"]
 
     # Fetch a random word that the user has not learned yet
-    record = supabase.rpc("get_random_word_for_topic", {'topic_id_': topic_id}).execute().data
+    record = (
+        supabase.rpc("get_random_word_for_topic", {"topic_id_": topic_id})
+        .execute()
+        .data
+    )
 
     if not record:
         # Handle the case when there are no more words
