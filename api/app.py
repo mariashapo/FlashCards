@@ -296,7 +296,83 @@ def query(topic_id, topic_name):
     return output_list
 
 
-@app.route("/study_session/<int:word_id>")
+@app.route("/study_session_topic")
+@login_required
+def study_session_topic():
+    # Fetch all topics from the Topics table
+    topics_data = (
+        supabase.table("Topics")
+        .select("id, name")
+        .eq("owner_id", current_user.id)
+        .execute()
+    )
+
+    # If the response contains data, convert it to a list of dictionaries
+    if topics_data.data:
+        topics_list = [
+            {"id": topic["id"], "name": topic["name"]} for topic in topics_data.data
+        ]
+    else:
+        topics_list = []
+
+    # Render the index template and pass the topics list
+    return render_template("study_session_topic.html", topics_list=topics_list)
+
+
+@app.route("/start_study_session", methods=["POST"])
+@login_required
+def start_study_session():
+    topic_id = request.form.get("topic_id")
+    # Assuming you're looking for the first word in the topic that hasn't been studied yet
+    word_data = (
+        supabase.table("Flashcards")
+        .select("id")  # Select only the id column if that's all you need
+        .eq("topic_id", topic_id)  # Make sure this is 'topic_id', not 'topic_is'
+        .eq("learned", False)  # Assuming there's a 'studied' column to filter by
+        #.order("id")  # Order by id ascending to get the first one
+        .limit(1)  # Limit to 1 to get only the first result
+        .execute()
+    )
+
+    first_word_id = word_data.data[0]['id'] if word_data.data else None
+
+    # Calculate the total number of words in the topic
+    total_words_data = (
+        supabase.table("Flashcards")
+        .select("id", count="exact")
+        .eq("topic_id", topic_id)
+        .execute()
+    )
+
+    total_words = total_words_data.count if total_words_data.data else 0
+    
+
+    # Calculate the number of learned words in the topic
+    learned_words_data = (
+        supabase.table("Flashcards")
+        .select("id", count="exact")
+        .eq("topic_id", topic_id)
+        .eq("learned", True)
+        .execute()
+    )
+
+    words_learned = learned_words_data.count if learned_words_data.data else 0
+
+    # Calculate the number of words not yet learned (if needed)
+    words_not_learned = total_words - words_learned
+
+    return render_template(
+        "start_study_session.html",
+        first_unstudied_word=first_word_id,
+        total_words=total_words,
+        words_learned=words_learned,
+        words_not_learned=words_not_learned,
+        topic_id=topic_id
+    )
+
+
+@app.route("/study_session/<int:word_id>", methods=["POST"])
+@login_required
 def study_session(word_id):
     # Fetch the word details based on the provided word_id
     word_details = (
