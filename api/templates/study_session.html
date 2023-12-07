@@ -47,6 +47,19 @@
             border-radius: 8px;
             border: none;
         }
+        .topic-square {
+            width: 12vw;
+            height: 15vh; /* Adjust the height as needed */
+            background-color: #3498db; /* Set the background color */
+            border-radius: 10px; /* Adjust the border-radius for rounded edges */
+            margin-bottom: 10px; /* Adjust the spacing between dividers */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            text-decoration: none;
+            color: white; /* Set the text color */
+        }
 
         .centering {
             margin: auto;
@@ -56,34 +69,42 @@
 </head>
 <body class="page-background text-center">
     {{ create_navbar("study_session", "form-background") }}
-    <div class="container centering">
+    <div class="container-sm centering">
+        <h2 class="translate-prompt">Translate the word: {{ word }}</h2>
         <div class="row">
-            <div class="col-12" align="center">
-                <h2 class="translate-prompt">Translate the word: {{ word }}</h2>
+        <div class="col-md-3"></div>
+        {% for i in range(options|length) %}
+            {% if i==2 %}
+                </div>
+                <div class="row">
+                <div class="col-md-3"></div>
+            {% endif %}
+            <div class="col-md-3" align="center">
                 <div class="card-container">
                     <form>
-                        {% for option in options %}
-                            <button class="card-button" type="button" onclick="checkTranslation('{{ option }}', {{ word_id }})">{{ option }}</button>
-                        {% endfor %}
+                            <button class="topic-square" type="button" onclick="checkTranslation('{{ options[i] }}', {{ word_id }})">{{ options[i] }}</button>
                     </form>
                 </div>
-
+                </div>
                 {% if correct %}
                     <p style="color: green; font-size: 20px;">Correct! Well done!</p>
                 {% endif %}
+        {% endfor %}
+                
             </div>
         </div>
     </div>
 
     <script>
         function checkTranslation(selectedOption, wordId) {
-            // Fetch the correct option from the server (you need to implement this logic in your Flask route)
+            // Fetch the correct option from the server
             console.log('Fetching correct option for Word ID:', wordId);
             fetch(`/get_correct_option/${wordId}`)
                 .then(response => response.json())
                 .then(correctData => {
-                    // Your logic to check if the selected option is correct
+                    // Check if the selected option is correct
                     var isCorrect = selectedOption === correctData.correct_option;
+                    console.log(selectedOption);
     
                     if (isCorrect) {
                         alert('Correct! Well done!');
@@ -94,14 +115,19 @@
                                 if (nextData.id) {
                                     window.location.href = `/study_session/${nextData.id}`;
                                 } else {
-                                    window.location.href = "/no_more_words";
+                                    // Show an alert message instead of redirecting
+                                    alert("Well done! All words learned. Please add new words.");
                                 }
                             });
                     } else {
                         alert('Wrong! Try again.');
+                        // Redirect to the same word if the word is wrong
+                        window.location.href = `/study_session/${wordId}`;
                     }
                 });
         }
     </script>
+    
+    
 </body>
 </html>
