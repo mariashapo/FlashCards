@@ -1,6 +1,9 @@
 {% macro create_navbar(location, color) %}
 	<nav class="navbar navbar-expand-lg navbar-dark {{color}}">
-		<a class="navbar-brand">FlashCards</a>  {# Name of the app #}
+		<a class="navbar-brand" href="{{ url_for('index')}}">
+            FlashCards
+            <img src="{{ url_for('static', filename='engspan.png') }}" alt="Flags" height="40" class="d-inline-block align-center">
+        </a>  {# Name of the app #}
 		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
 				aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
 			<span class="navbar-toggler-icon"></span>
@@ -9,27 +12,22 @@
 				<ul class="navbar-nav me-auto">
 					<li class="nav-item">
 						<a class="nav-link {{'active' if location=='topics'}}" href="{{ url_for('topics')}}">
-                            Card Sets
+                            View card sets
 						</a>
 					</li>
 					<li class="nav-item">
 						<a class="nav-link {{'active' if location=='add_word'}}" href="{{ url_for('add_word')}}">
-                            Add Word
+                            Add words manually
 						</a>
 					</li>
 					<li class="nav-item">
 						<a class="nav-link {{'active' if location=='generate_words'}}" href="{{ url_for('generate_words')}}">
-                            Generate Words
-						</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link {{'active' if location=='display_words'}}" href="{{ url_for('display_words')}}">
-                            Display Words
+                            Generate words automatically 
 						</a>
 					</li>
 					<li class="nav-item">
 						<a class="nav-link {{'active' if location=='study_session'}}" href="{{ url_for('study_session', word_id = 1)}}">
-                            Study Session
+                            Start study session
 						</a>
 					</li>
 					{% if not current_user.is_anonymous %}
