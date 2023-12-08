@@ -3,10 +3,15 @@ import json
 import random
 
 import openai
-from flask import (Flask, flash, jsonify, redirect, render_template, request,
-                   url_for)
-from flask_login import (LoginManager, UserMixin, current_user, login_required,
-                         login_user, logout_user)
+from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
+from flask_login import (
+    LoginManager,
+    UserMixin,
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
 from supabase import Client, create_client
 
 # Supabase credentials
@@ -79,7 +84,7 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
         data = {"username": username, "password": password}
-        
+
         # Check if username already exists in the database
         check = supabase.table("Users").select("*").eq("username", username).execute()
         try:
@@ -93,9 +98,11 @@ def login():
             except IndexError:
                 flash(f"Error adding user {username} to the database.")
                 return redirect("signup")
-            
+
         # If username already exists in the database
-        flash(f'Username: {username} is already in use. Please, choose a different one.')
+        flash(
+            f"Username: {username} is already in use. Please, choose a different one."
+        )
         return redirect("signup")
 
     return render_template("login.html")
@@ -175,7 +182,12 @@ def add_new_topic():
 @app.route("/add_word")
 @login_required
 def add_word():
-    response = supabase.table("Topics").select("id, name").eq("owner_id", current_user.id).execute()
+    response = (
+        supabase.table("Topics")
+        .select("id, name")
+        .eq("owner_id", current_user.id)
+        .execute()
+    )
 
     topics = {topic["id"]: topic["name"] for topic in response.data}
 
@@ -186,8 +198,9 @@ def add_word():
     has_topics = len(topics_list) > 0
 
     # Render the template and pass the topics list and has_topics flag
-    return render_template("add_word.html", topics_list=topics_list, has_topics=has_topics)
-
+    return render_template(
+        "add_word.html", topics_list=topics_list, has_topics=has_topics
+    )
 
 
 @app.route("/generate_words")
@@ -218,12 +231,12 @@ def added_word():
     # Insert data into Supabase
     data = {"word1": word, "word2": translation, "topic_id": topic_id}
     response = supabase.table("Flashcards").insert(data).execute()
-    
+
     try:
         response.data[0]["word1"]
     except IndexError:
         print("Error adding flash cards to database.")
-        
+
     return render_template(
         "added_word.html",
         word=word,
@@ -261,7 +274,10 @@ def display_words(topic_id):
     else:
         first_pair = words_list[0]
     return render_template(
-        "display_words.html", words=json.dumps(words_list), first_pair=first_pair, list_length = len(words_list)
+        "display_words.html",
+        words=json.dumps(words_list),
+        first_pair=first_pair,
+        list_length=len(words_list),
     )  # Start displaying the first element of the list
 
 

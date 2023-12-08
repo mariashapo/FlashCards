@@ -1,14 +1,8 @@
-import ast
-from unittest.mock import MagicMock, patch
-
-import openai
 import pytest
-
-# Assuming your Flask app is named 'flask_app'
+from unittest.mock import MagicMock, patch
 from app import app as flask_app
 
 
-# Mocks and fixtures
 @pytest.fixture
 def client():
     flask_app.config["TESTING"] = True
@@ -16,7 +10,6 @@ def client():
         yield client
 
 
-# Mock API to not interact with real OpenAI API
 @pytest.fixture
 def mock_openai_api():
     with patch("openai.Completion.create") as mock:
@@ -26,7 +19,7 @@ def mock_openai_api():
                     text=str(
                         [
                             {"English": "Hello", "Spanish": "Hola"},
-                            {"English": "Hell", "Spanish": "Hol"},
+                            {"English": "Goodbye", "Spanish": "Adiós"},
                         ]
                     )
                 )
@@ -35,51 +28,47 @@ def mock_openai_api():
         yield mock
 
 
-# Mock database to not interact with real Supabase
 @pytest.fixture
 def mock_supabase(mocker):
-    # Mock the 'insert' method to simulate a successful database operation
-    mocked_insert = MagicMock(
+    mocked_select = MagicMock(
         return_value=MagicMock(
             execute=MagicMock(
                 return_value=MagicMock(
-                    data=[{"word1": "test", "word2": "prueba", "topic_id": 1, "id": 1}]
+                    data=[{"username": "gpo23", "password": "gpo23Passwort"}]
                 )
             )
         )
     )
-
-    # Mock the 'select', 'eq', 'order', and 'limit' methods as before
-    mocked_table = MagicMock(
-        insert=mocked_insert,
-        select=MagicMock(
-            return_value=MagicMock(
-                execute=MagicMock(
-                    return_value=MagicMock(data=[{"word1": "Hello", "word2": "Hola"}])
+    mocked_insert = MagicMock(
+        return_value=MagicMock(
+            execute=MagicMock(
+                return_value=MagicMock(
+                    data=[{"id": 1, "username": "gpo23", "password": "gpo23Passwort"}]
                 )
             )
-        ),
+        )
     )
-
+    mocked_table = MagicMock(select=mocked_select, insert=mocked_insert)
     mocker.patch("app.supabase.table", return_value=mocked_table)
+    return mocked_table
 
 
-# Test cases
-def test_query_correct_output(mock_openai_api):
-    topic = "Test Topic"
-    vocab = ["Test", "Vocab"]
-    result = query(topic, vocab)
-    assert isinstance(result, list)
-    assert all(isinstance(item, dict) for item in result)
-    assert "English" in result[0] and "Spanish" in result[0]
+def test_login_route(client):
+    response = client.post(
+        "/login",
+        data=dict(username="gpo23", password="gpo23Passwort"),
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
 
 
-def test_query_handling_exceptions(mock_openai_api):
-    topic = "Test Topic"
-    vocab = ["Test", "Vocab"]
-    mock_openai_api.side_effect = Exception("API Error")
-    result = query(topic, vocab)
-    assert "Error" in result
+def test_signup_route(client):
+    response = client.post(
+        "/signup",
+        data=dict(username="newuser", password="newpassword"),
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
 
 
 def test_index_route(client):
@@ -87,52 +76,41 @@ def test_index_route(client):
     assert response.status_code == 200
 
 
-"""
-def test_add_word_route(client):
-    response = client.get("/add_word")
+def test_logout_route(client):
+    client.post(
+        "/login",
+        data=dict(username="gpo23", password="gpo23Passwort"),
+        follow_redirects=True,
+    )
+    response = client.get("/logout", follow_redirects=True)
     assert response.status_code == 200
 
 
-def test_generate_words_route(client):
-    response = client.get("/generate_words")
-    assert response.status_code == 200
-
-
-def test_added_word_route(client, mock_supabase):
+def test_add_new_topic_route(client):
+    client.post(
+        "/login",
+        data=dict(username="gpo23", password="gpo23Passwort"),
+        follow_redirects=True,
+    )
     response = client.post(
-        "/added_word", data={"word": "test", "translation": "prueba"}
+        "/add_new_topic", data={"topicName": "New Topic"}, follow_redirects=True
     )
     assert response.status_code == 200
 
 
-def test_generated_words_route(client):
+def test_unauthorized_access(client):
+    response = client.get("/topics")
+    assert response.status_code == 302
+
+
+def test_start_study_session(client, mock_supabase):
+    mock_supabase.return_value.select.return_value.eq.return_value.eq.return_value\
+                 .execute.return_value = MagicMock(data=[{"id": 1}], count=1)
+
+    mock_supabase.return_value.select.return_value.eq.return_value.eq.return_value.execute\
+                 .return_value = MagicMock(count=0)
     response = client.post(
-        "/generated_words", data={"topic": "Test Topic", "prompt": "Test Prompt"}
+        "/start_study_session", data={"topic_id": "1"}, follow_redirects=True
     )
+
     assert response.status_code == 200
-"""
-
-
-def query(topic, current_vocab):
-    # Later I will make the api key an environment variable
-    api_key = "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"
-    openai.api_key = api_key
-
-    # Constructing the prompt
-    prompt = (
-        f"Create 10 unique entries of English-Spanish word pairs related "
-        f"to the topic '{topic}', tailored for a beginner level. Each entry "
-        f"should include an English word and its Spanish translation. "
-        f"Do not duplicate these existing vocabulary entries: "
-        f"{', '.join(current_vocab)}. Provide exactly 10 entries."
-    )
-
-    try:
-        response = openai.Completion.create(
-            engine="text-davinci-003", prompt=prompt, max_tokens=2500
-        )
-        response_text = response.choices[0].text.strip()
-        response_data = ast.literal_eval(response_text)
-        return response_data
-    except Exception as e:
-        return f"Error: {e}"
