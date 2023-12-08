@@ -1,18 +1,16 @@
 import ast
 import json
+import os
 import random
 
 import openai
-from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
-from flask_login import (
-    LoginManager,
-    UserMixin,
-    current_user,
-    login_required,
-    login_user,
-    logout_user,
-)
+from flask import (Flask, flash, jsonify, redirect, render_template, request,
+                   url_for)
+from flask_login import (LoginManager, UserMixin, current_user, login_required,
+                         login_user, logout_user)
 from supabase import Client, create_client
+
+open_ai_key = os.getenv("OPEN_AI_KEY")
 
 # Supabase credentials
 SUPABASE_URL = "https://qfgwfjebnbvfijeaejza.supabase.co"
@@ -293,8 +291,7 @@ def query(topic_id, topic_name):
         .data
     )
     existing_vocab = [pair["word1"] for pair in current_vocab_pairs]
-    api_key = "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"
-    openai.api_key = api_key
+    openai.api_key = open_ai_key
 
     print("The topic is: ", topic_name)
     print("The topic ID is: ", topic_id)
