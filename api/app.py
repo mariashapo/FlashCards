@@ -126,6 +126,7 @@ def topics():
 
 
 @app.route("/add_new_topic", methods=["POST"])
+@login_required
 def add_new_topic():
     # Get a new topic name from the request form data
     new_topic_name = request.form.get("newTopicName")
@@ -163,20 +164,19 @@ def add_new_topic():
 @app.route("/add_word")
 @login_required
 def add_word():
-    # Fetch corresponding topic names from Topics table
-    response = (
-        supabase.table("Topics")
-        .select("id, name")
-        .eq("owner_id", current_user.id)
-        .execute()
-    )
+    response = supabase.table("Topics").select("id, name").eq("owner_id", current_user.id).execute()
+
     topics = {topic["id"]: topic["name"] for topic in response.data}
 
-    # Filter only the names of the topics that are used in Flashcards
+    # Construct a list of topics for the dropdown
     topics_list = [{"id": topic_id, "name": topics[topic_id]} for topic_id in topics]
 
-    # Render the template and pass the topics list
-    return render_template("add_word.html", topics_list=topics_list)
+    # Check if there are any topics available
+    has_topics = len(topics_list) > 0
+
+    # Render the template and pass the topics list and has_topics flag
+    return render_template("add_word.html", topics_list=topics_list, has_topics=has_topics)
+
 
 
 @app.route("/generate_words")
@@ -207,10 +207,12 @@ def added_word():
     # Insert data into Supabase
     data = {"word1": word, "word2": translation, "topic_id": topic_id}
     response = supabase.table("Flashcards").insert(data).execute()
+    
     try:
         response.data[0]["word1"]
     except (TypeError, AttributeError):
         print("Error adding flash cards to database.")
+        
     return render_template(
         "added_word.html",
         word=word,

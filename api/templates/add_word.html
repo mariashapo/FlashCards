@@ -27,7 +27,8 @@
             <div class="col-md-12">
                 <div class="form-box form-background">
                     <h2 class="text-center">Add Word and Translation</h2>
-                    <form action="{{ url_for('added_word') }}" method="post">
+                    <form id="addWordForm" action="{{ url_for('added_word') }}" method="post">
+                        <!-- Your form fields -->                    
 
                         <div class="form-group">
                             <div style="text-align: center;">
@@ -43,15 +44,14 @@
 
                         <!-- Topic Selection Dropdown -->
                         <div class="form-group">
-                            <div style="text-align: center;">
-                            <label for="topic" class="text-center" style="font-size: 20px;">Select a Set to Add Words</label>
+                            <label for="topic">Select a Set to Add Words</label>
                             <select class="form-select" id="topic" name="topic">
+                                <option value="">Select a topic...</option>
                                 {% for topic in topics_list %}
-                                <option value="{{ topic.id }}">{{ topic.name }}</option>
+                                    <option value="{{ topic.id }}">{{ topic.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-
                         <button type="submit" class="btn btn-primary btn-block">Submit</button>
                     </form>
                 </div>
@@ -62,4 +62,20 @@
     <!-- Include Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var form = document.getElementById('addWordForm');
+        var topicSelect = document.getElementById('topic');
+
+        form.addEventListener('submit', function(event) {
+            if (!topicSelect.value) {
+                event.preventDefault(); // Prevent form submission
+                alert('Please select a topic before submitting.');
+            }
+        });
+    });
+</script>
+
 </html>
