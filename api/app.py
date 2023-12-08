@@ -62,7 +62,7 @@ def index():
             else:
                 flash("Incorrect password")
                 return redirect("login")
-        except (TypeError, AttributeError, IndexError):
+        except IndexError:
             flash("The user was not found")
             return redirect("login")
     return render_template("index.html", username=None)
@@ -84,16 +84,17 @@ def login():
         check = supabase.table("Users").select("*").eq("username", username).execute()
         try:
             check.data[0]
-        except IndexError:  # If user does not exist
+        except IndexError:  # If username is not in use
             response = supabase.table("Users").insert(data).execute()
             try:
                 response.data[0]["username"]
                 flash(f"User: {username} was properly registered.")
                 return redirect("login")
-            except (TypeError, AttributeError):
-                print("Error adding flash cards to database.")
+            except IndexError:
+                flash(f"Error adding user {username} to the database.")
+                return redirect("signup")
             
-        # If user already exists in the database
+        # If username already exists in the database
         flash(f'Username: {username} is already in use. Please, choose a different one.')
         return redirect("signup")
 
@@ -220,7 +221,7 @@ def added_word():
     
     try:
         response.data[0]["word1"]
-    except (TypeError, AttributeError):
+    except IndexError:
         print("Error adding flash cards to database.")
         
     return render_template(
