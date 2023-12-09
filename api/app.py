@@ -13,13 +13,9 @@ from supabase import Client, create_client
 open_ai_key = os.getenv("OPEN_AI_KEY")
 
 # Supabase credentials
-SUPABASE_URL = "https://qfgwfjebnbvfijeaejza.supabase.co"
-SUPABASE_ANON_KEY = (
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ"
-    "SIsInJlZiI6InFmZ3dmamVibmJ2ZmlqZWFlanphIiwicm9sZSI6InNlcnZp"
-    "Y2Vfcm9sZSIsImlhdCI6MTcwMTI1MzQyOSwiZXhwIjoyMDE2ODI5NDI5fQ."
-    "8EnvGn8JINHB5gEu0hWTKvsC7AqSDGPrH12bTBjIMT4"
-)
+
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
@@ -254,8 +250,6 @@ def generated_words():
 
     output_list = query(topic_id, prompt)
 
-    # Render an intermediate page with a loading message
-    # return render_template("loading.html")
     return render_template(
         "generated_words.html", output_list=output_list, topic_name=topic_name
     )
@@ -411,18 +405,12 @@ def study_session(word_id):
         supabase.table("Flashcards").select("topic_id").eq("id", word_id).execute().data
     )[0]["topic_id"]
 
-    # fetch a random word here
-    # write a query to fetch a random not learned word from the same topic set
+    # a random not learned word from the same topic set
     word_details = (
         supabase.rpc("get_random_word_for_topic", {"topic_id_": topic_id})
         .execute()
         .data
     )
-
-    print(word_details)
-    if not word_details:
-        # Handle the case when the word with the specified ID is not found
-        return render_template("word_not_found.html")
 
     # Extract the word details
     record = word_details[0]
