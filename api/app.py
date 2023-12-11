@@ -1,27 +1,21 @@
 import ast
 import json
+import os
 import random
 
 import openai
-from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
-from flask_login import (
-    LoginManager,
-    UserMixin,
-    current_user,
-    login_required,
-    login_user,
-    logout_user,
-)
+from flask import (Flask, flash, jsonify, redirect, render_template, request,
+                   url_for)
+from flask_login import (LoginManager, UserMixin, current_user, login_required,
+                         login_user, logout_user)
 from supabase import Client, create_client
 
+open_ai_key = os.getenv("OPEN_AI_KEY")
+
 # Supabase credentials
-SUPABASE_URL = "https://qfgwfjebnbvfijeaejza.supabase.co"
-SUPABASE_ANON_KEY = (
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ"
-    "SIsInJlZiI6InFmZ3dmamVibmJ2ZmlqZWFlanphIiwicm9sZSI6InNlcnZp"
-    "Y2Vfcm9sZSIsImlhdCI6MTcwMTI1MzQyOSwiZXhwIjoyMDE2ODI5NDI5fQ."
-    "8EnvGn8JINHB5gEu0hWTKvsC7AqSDGPrH12bTBjIMT4"
-)
+
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
@@ -39,7 +33,7 @@ class SimpleUser(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_id):
-    """Takes a user ID and returns a user object or None if the user does not exist."""
+    # Takes a user ID and returns a user object or None if the user does not exist
     if user_id is not None:
         return SimpleUser(user_id)
     return None
@@ -47,29 +41,35 @@ def load_user(user_id):
 
 @login_manager.unauthorized_handler
 def unauthorized():
-    """Redirect unauthorized users to Login page."""
+    # Redirect unauthorized users to Login page
     flash("You must be logged in to view that page.")
     return redirect(url_for("login"))
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    # If the user is being redirected to the route from '/login'
     if request.method == "POST":
+        # Get the login details and attempt to find the username in supabase
         username = request.form.get("username")
         password = request.form.get("password")
         response = (
             supabase.table("Users").select("*").eq("username", username).execute()
         )
         try:
+            # If username found in database and correct password was input
             if response.data[0]["password"] == password:
                 login_user(SimpleUser(str(response.data[0]["id"])))
                 return render_template("index.html", username=username)
-            else:
+
+            else:  # Username found but incorrect password was input
                 flash("Incorrect password")
                 return redirect("login")
-        except IndexError:
+
+        except IndexError:  # Username was not found in the database
             flash("The user was not found")
             return redirect("login")
+
     return render_template("index.html", username=None)
 
 
@@ -80,26 +80,31 @@ def signup():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    # If the user is being redirected to the route from '/signup'
     if request.method == "POST":
+        # Get the signup details and check if username already exists in the database
         username = request.form.get("username")
         password = request.form.get("password")
         data = {"username": username, "password": password}
-
-        # Check if username already exists in the database
         check = supabase.table("Users").select("*").eq("username", username).execute()
         try:
             check.data[0]
-        except IndexError:  # If username is not in use
+
+        # If username is not present in the database
+        except IndexError:
+            # Insert data into the database
             response = supabase.table("Users").insert(data).execute()
-            try:
+
+            try:  # User was registered correctly
                 response.data[0]["username"]
                 flash(f"User: {username} was properly registered.")
                 return redirect("login")
-            except IndexError:
+
+            except IndexError:  # Issue when attempting to register the user
                 flash(f"Error adding user {username} to the database.")
                 return redirect("signup")
 
-        # If username already exists in the database
+        # If username already exists in the database, it cannot be accepted
         flash(
             f"Username: {username} is already in use. Please, choose a different one."
         )
@@ -111,7 +116,7 @@ def login():
 @app.route("/logout")
 @login_required
 def logout():
-    """Route used to allow users to logout."""
+    # Route used to allow users to logout
     logout_user()
     flash("You successfully logged out")
     return redirect(url_for("login"))
@@ -256,8 +261,6 @@ def generated_words():
 
     output_list = query(topic_id, prompt)
 
-    # Render an intermediate page with a loading message
-    # return render_template("loading.html")
     return render_template(
         "generated_words.html", output_list=output_list, topic_name=topic_name
     )
@@ -293,8 +296,7 @@ def query(topic_id, topic_name):
         .data
     )
     existing_vocab = [pair["word1"] for pair in current_vocab_pairs]
-    api_key = "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"
-    openai.api_key = api_key
+    openai.api_key = open_ai_key
 
     print("The topic is: ", topic_name)
     print("The topic ID is: ", topic_id)
@@ -414,18 +416,12 @@ def study_session(word_id):
         supabase.table("Flashcards").select("topic_id").eq("id", word_id).execute().data
     )[0]["topic_id"]
 
-    # fetch a random word here
-    # write a query to fetch a random not learned word from the same topic set
+    # a random not learned word from the same topic set
     word_details = (
         supabase.rpc("get_random_word_for_topic", {"topic_id_": topic_id})
         .execute()
         .data
     )
-
-    print(word_details)
-    if not word_details:
-        # Handle the case when the word with the specified ID is not found
-        return render_template("word_not_found.html")
 
     # Extract the word details
     record = word_details[0]

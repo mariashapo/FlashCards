@@ -1,6 +1,13 @@
-import pytest
+import os
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app import app as flask_app
+
+# Supabase credentials
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
 
 
 @pytest.fixture
@@ -104,11 +111,11 @@ def test_unauthorized_access(client):
 
 
 def test_start_study_session(client, mock_supabase):
-    mock_supabase.return_value.select.return_value.eq.return_value.eq.return_value\
-                 .execute.return_value = MagicMock(data=[{"id": 1}], count=1)
+    mock_supabase.return_value.select.return_value.eq.return_value.eq.return_value.\
+        execute.return_value = MagicMock(data=[{"id": 1}], count=1)
 
-    mock_supabase.return_value.select.return_value.eq.return_value.eq.return_value.execute\
-                 .return_value = MagicMock(count=0)
+    mock_supabase.return_value.select.return_value.eq.return_value.eq.return_value.\
+        execute.return_value = MagicMock(count=0)
     response = client.post(
         "/start_study_session", data={"topic_id": "1"}, follow_redirects=True
     )

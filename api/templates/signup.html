@@ -1,85 +1,105 @@
 {% from "navbar.html" import create_navbar with context%}
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
     <style>
-            .form-box {
-              max-width: 25vw; /* Adjust this value to your desired width */
-              margin: auto;
-              padding: 20px;
-              border: 1px solid #ddd;
-              border-radius: 10px;
-              margin-top: 20vh;
-            }
+        .form-box {
+            max-width: 50vw;
+            /* Adjust this value to your desired width */
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-top: 17vh;
+        }
 
-            .form-background {
-                background-color: #3498db;
-            }
+        .form-background {
+            background-color: #3498db;
+        }
 
-            .page-background {
-                background-color: #dadbdc;
-            }
-          </style>
-	</head>
+        .page-background {
+            background-color: #dadbdc;
+        }
+
+    </style>
+</head>
+
 <body class="page-background">
     {{create_navbar("login", "form-background")}}
     {# Display any flashed messages #}
     {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div class="alert alert-warning" role="alert">
-                {% for message in messages %}
-                    {{ message }}
-                {% endfor %}
-            </div>
-        {% endif %}
+    {% if messages %}
+    <div class="alert alert-warning" role="alert">
+        {% for message in messages %}
+        {{ message }}
+        {% endfor %}
+    </div>
+    {% endif %}
     {% endwith %}
     <h1>SignUp Page</h1>
     <h3>Please, enter the following details to register</h3>
-    <form action="login" method="post">
-        <div class="form-group">
-         <div style="text-align: center;">
-        <label for="word" class="text-center" style="font-size: 30px;">Username</label>
-         </div>
-        <input type="text" id="username" class="form-control" name="username" required>
-         </div>
- 
-        <div class="form-group">
-         <div style="text-align: center;">
-        <label for="translation" class="text-center" style="font-size: 30px;">Password</label>
-         </div>
-        <input type="text" id="password" class="form-control" name="password" onkeyup="checkSamePasswords()" required> 
-         </div>
-        <div class="form-group">
-         <div style="text-align: center;">
-        <label for="translation" class="text-center" style="font-size: 30px;">Confirm Password</label>
-         </div>
-        <input type="text" id="password_confirmation" class="form-control" name="password_confirmation" onkeyup="checkSamePasswords()" required>
-         </div>
- 
- 
-        <button id="button" type="submit"class="btn btn-primary btn-block" disabled>Submit</button><span id="unmatched_passwords_error" hidden>The passwords do not match</span>
-    </form>
-    <a class="link-primary" href="{{ url_for('login') }}">Already a user?</a>
-<script>
-    function checkSamePasswords(){
-        password = document.getElementById("password").value;
-        password_confimation = document.getElementById("password_confirmation").value;
+    <div class="form-box form-background">
+        <form action="login" method="post">
+            <div class="form-group row" style="margin-top: 2vh;">
+                <div style="text-align: center;" class="col-md-3">
+                    <label for="word" class="text-center" style="font-size: 30px; color: white;">Username</label>
+                </div>
+                <div class="col">
+                    <input type="text" id="username" class="form-control page-background" name="username"
+                        required>
+                </div>
+            </div>
 
-        // if passwords are the same, enable button. Otherwise, disaable the button
-        if (password == password_confimation && password.length != 0)
-            document.getElementById("button").disabled = false;
-        else
-            document.getElementById("button").disabled = true;
+            <div class="form-group row" style="margin-top: 3vh;">
+                <div style="text-align: center;" class="col-md-3">
+                    <label for="password" class="text-center" style="font-size: 30px; color: white;">Password</label>
+                </div>
+                <div class="col">
+                    <input type="password" id="password" class="form-control page-background" name="password"
+                        onkeyup="checkSamePasswords()" required>
+                </div>
+            </div>
+            <div class="form-group row" style="margin-top: 3vh;">
+                <div style="text-align: center;" class="col-md-3">
+                    <label for="translation" class="text-center" style="font-size: 30px; color: white;">Confirm Password</label>
+                </div>
+                <div class="col" style="margin-top: 20px;">
+                    <input type="password" id="password_confirmation" class="form-control page-background"
+                        name="password_confirmation" onkeyup="checkSamePasswords()" required>
+                </div>
+            </div>
 
-        console.log(password);
-        console.log(password_confimation);
-        // If no passwords have been entered or if passwords match hide error message, otherwise show it 
-        if (password.lenght == 0 && password_confimation.length == 0 || password == password_confimation)
-            document.getElementById("unmatched_passwords_error").setAttribute("hidden", "hidden");
-        else
-            document.getElementById("unmatched_passwords_error").removeAttribute("hidden");
-    }
-</script>
+            <div class="d-flex justify-content-end">
+                <span style="margin-top: 1vh; margin-right: 1vw;" id="unmatched_passwords_error" hidden>The passwords do
+                    not match</span><button id="button" type="submit" class="btn btn-primary btn-block"
+                    disabled>Sign up</button>
+                <br>
+            </div>
+        </form>
+        <a class="link-primary" href="{{ url_for('login') }}">Already a user?</a>
+    </div>
+    <script>
+        function checkSamePasswords() {
+            password = document.getElementById("password").value;
+            password_confimation = document.getElementById("password_confirmation").value;
+
+            // if passwords are the same, enable button. Otherwise, disaable the button
+            if (password == password_confimation && password.length != 0)
+                document.getElementById("button").disabled = false;
+            else
+                document.getElementById("button").disabled = true;
+
+            console.log(password);
+            console.log(password_confimation);
+            // If no passwords have been entered or if passwords match hide error message, otherwise show it 
+            if (password.lenght == 0 && password_confimation.length == 0 || password == password_confimation)
+                document.getElementById("unmatched_passwords_error").setAttribute("hidden", "hidden");
+            else
+                document.getElementById("unmatched_passwords_error").removeAttribute("hidden");
+        }
+    </script>
 </body>
+
 </html>
