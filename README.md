@@ -27,4 +27,4 @@ The web application is an English-Spanish language learning platform. It allows 
 *Supabase Database Structure*
 4. Get an OpenAI API key
 5. Add your Supabase credentials and OpenAI API key as environment variables
-6. Run the code from the ./api folder: flaskrun
+6. Run the code from the `./api` folder: `flask run`
