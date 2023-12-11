@@ -39,7 +39,7 @@
         <div class="form-group">
             <div style="text-align: center;">
             <label for="topic" class="text-center" style="font-size: 20px;">Select a Set to Add Words</label>
-            <select class="form-select" id="topic" name="topic">
+            <select class="form-select" id="topic" name="topic" required>
                 {% for topic in topics_list %}
                 <option value="{{ topic.id }}">{{ topic.name }}</option>
                 {% endfor %}
