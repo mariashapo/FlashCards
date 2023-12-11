@@ -19,7 +19,11 @@ The web application is an English-Spanish language learning platform. It allows 
 4. **Database Interaction:** Interaction with Supabase for storing, retrieving, and updating data.
 5. **API Interaction:** For flashcard generation, the Flask application interacts with OpenAI's API.
 
-## How to run the app
+## How to use the app online
+1. Go to [our website]([URL](https://flash-cards-kappa.vercel.app/))
+2. Sign up / in and use the app
+
+## How to run the app locally
 1. Clone the repository
 2. Install dependencies using `pip install -r "requirements.txt"`
 3. Set up your own database on Supabase using this structure:
