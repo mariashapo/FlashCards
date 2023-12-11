@@ -20,7 +20,7 @@ The web application is an English-Spanish language learning platform. It allows 
 5. **API Interaction:** For flashcard generation, the Flask application interacts with OpenAI's API.
 
 ## How to use the app online
-1. Go to [our website]([URL](https://flash-cards-kappa.vercel.app/))
+1. Go to [**our website**](https://flash-cards-kappa.vercel.app/)
 2. Sign up / in and use the app
 
 ## How to run the app locally
