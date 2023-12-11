@@ -21,7 +21,7 @@ The web application is an English-Spanish language learning platform. It allows 
 
 ## How to run the app
 1. Clone the repository
-2. Install requirements via pip install -r "requirements.txt"
+2. Install dependencies using `pip install -r "requirements.txt"`
 3. Set up your own database on Supabase using this structure:
    ![Supabase Database Structure](database.png)
 *Supabase Database Structure*
