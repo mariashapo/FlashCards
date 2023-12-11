@@ -1,4 +1,4 @@
-# SSE Group Project: Flashcards Website
+# Flashcards Website
 
 ## Overall Structure
 The web application is an English-Spanish language learning platform. It allows users to manage flashcard sets, generate new entries, and revise vocabulary through custom study sessions. The platform uses Supabase for flashcard storage and OpenAI for generating new flashcards based on topics. Users can also manually add new entries to their flashcard sets.
